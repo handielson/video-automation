@@ -10,6 +10,7 @@ import json
 from datetime import datetime
 
 from config.settings import settings
+from modules.caption_generator import caption_generator
 
 class FFmpegVideoEditor:
     """Creates final videos using FFmpeg directly (no Python library dependencies)."""
@@ -18,6 +19,11 @@ class FFmpegVideoEditor:
         self.output_dir = settings.OUTPUT_DIR
         self.output_dir.mkdir(exist_ok=True)
         
+        # Store video properties for metadata
+        self.width = settings.VIDEO_WIDTH
+        self.height = settings.VIDEO_HEIGHT
+        self.fps = settings.VIDEO_FPS
+
         # Check FFmpeg availability
         try:
             subprocess.run(['ffmpeg', '-version'], capture_output=True, check=True)
@@ -67,12 +73,17 @@ class FFmpegVideoEditor:
         temp_with_narration = self.output_dir / "temp_with_audio.mp4"
         self._add_narration(temp_video, narration_audio, temp_with_narration)
         
-        # Step 3: Skip background music temporarily (FFmpeg mixer issue)
+        # Step 3: Add TikTok-style captions
+        print("   📝 Adicionando legendas estilo TikTok...")
+        temp_with_captions = self.output_dir / "temp_with_captions.mp4"
+        self._add_captions(temp_with_narration, script, duration, temp_with_captions)
+        
+        # Step 4: Skip background music temporarily (FFmpeg mixer issue)
         print("   ⏭️  Pulando música de fundo (temporariamente)")
-        temp_with_narration.replace(output_path)
+        temp_with_captions.replace(output_path)
         
         # Cleanup temp files
-        for temp_file in [temp_video, temp_with_narration]:
+        for temp_file in [temp_video, temp_with_narration, temp_with_captions]:
             if temp_file.exists():
                 temp_file.unlink()
         
@@ -97,6 +108,21 @@ class FFmpegVideoEditor:
         except:
             # Fallback: estimate 3 chars per second
             return 50.0
+    
+    def _get_video_duration(self, video_path: Path) -> float:
+        """Get video duration using ffprobe."""
+        try:
+            cmd = [
+                'ffprobe', '-v', 'error',
+                '-show_entries', 'format=duration',
+                '-of', 'default=noprint_wrappers=1:nokey=1',
+                str(video_path)
+            ]
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            return float(result.stdout.strip())
+        except Exception as e:
+            print(f"   ⚠️  Erro ao obter duração do vídeo: {e}")
+            return 0.0 # Fallback to 0
     
     def _create_background_video(self, video_paths: List[Path], duration: float, output: Path):
         """Create background video from clips."""
@@ -200,19 +226,61 @@ class FFmpegVideoEditor:
         
         print(f"   ✅ Música adicionada: {output.stat().st_size / 1024 / 1024:.1f} MB")
     
-    def _save_metadata(self, video_path: Path, script: Dict):
-        """Save video metadata as JSON."""
-        metadata_path = video_path.with_suffix('.json')
-        
+    def _add_captions(self, video: Path, script: dict, duration: float, output: Path):
+        """Add TikTok-style captions to video using FFmpeg subtitles."""
+        try:
+            # Generate SRT subtitle file
+            srt_path = caption_generator.create_caption_file(script, duration, video)
+            
+            if not srt_path or not srt_path.exists():
+                print("   ⚠️  Legendas não criadas, continuando sem legendas...")
+                video.replace(output)
+                return
+            
+            # Get FFmpeg subtitle filter
+            subtitle_filter = caption_generator.get_ffmpeg_subtitle_filter(srt_path)
+            
+            # Apply subtitles with FFmpeg
+            cmd = [
+                'ffmpeg', '-y',
+                '-i', str(video),
+                '-vf', subtitle_filter,
+                '-c:a', 'copy',  # Copy audio without re-encoding
+                '-c:v', 'libx264',  # Re-encode video to burn in subtitles
+                '-preset', 'fast',
+                str(output)
+            ]
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+            
+            if result.returncode != 0:
+                print(f"   ⚠️  Erro ao adicionar legendas: {result.stderr[:200]}")
+                print("   Continuando sem legendas...")
+                video.replace(output)
+            else:
+                print(f"   ✅ Legendas adicionadas com sucesso!")
+            
+            # Cleanup SRT file
+            if srt_path.exists():
+                srt_path.unlink()
+                
+        except Exception as e:
+            print(f"   ⚠️  Erro ao processar legendas: {e}")
+            print("   Continuando sem legendas...")
+            video.replace(output)
+    
+    def _save_metadata(self, video_path: Path, script: dict):
+        """Save video metadata."""
         metadata = {
-            "video_file": video_path.name,
             "script": script,
-            "duration": script.get("duration_estimate", 50),
-            "resolution": f"{settings.VIDEO_WIDTH}x{settings.VIDEO_HEIGHT}",
-            "fps": settings.VIDEO_FPS,
-            "editor": "FFmpeg"
+            "duration": self._get_video_duration(video_path),
+            "resolution": f"{self.width}x{self.height}",
+            "fps": self.fps,
+            "editor": "FFmpeg",
+            "captions": "TikTok-style"
         }
         
+        metadata_path = video_path.with_suffix('.json')
         with open(metadata_path, 'w', encoding='utf-8') as f:
             json.dump(metadata, f, indent=2, ensure_ascii=False)
 
