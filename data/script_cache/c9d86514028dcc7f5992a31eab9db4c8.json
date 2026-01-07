@@ -1,0 +1,13 @@
+{
+  "hook": "Você sabia que a cor do céu não é real, mas uma ilusão cósmica?",
+  "body": "O sol emite luz branca, uma mistura de todas as cores do arco-íris. Essa luz encontra a atmosfera, cheia de moléculas de nitrogênio e oxigênio. Essas partículas são muito pequenas, perfeitas para espalhar as ondas de luz azul e violeta muito mais que as cores de onda mais longas, como vermelho e amarelo. É como se o azul fosse rebatido por todo lado, inundando nosso campo de visão. Mas ao pôr do sol, a luz viaja por uma camada muito mais espessa da atmosfera. Quase todo o azul e o violeta são espalhados para longe do seu olhar, deixando passar as ondas mais longas: o amarelo, laranja e o vibrante vermelho. É a física em ação!",
+  "outro": "O azul é luz espalhada! E você, já conhecia esse truque da atmosfera?",
+  "visual_keywords": [
+    "céu",
+    "sol",
+    "cores",
+    "atmosfera",
+    "pôr do sol"
+  ],
+  "duration_estimate": 48
+}

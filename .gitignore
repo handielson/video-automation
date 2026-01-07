@@ -1,0 +1,60 @@
+# Environment Variables (NUNCA COMPARTILHE!)
+.env
+.env.local
+*.env
+
+# API Credentials
+client_secrets.json
+youtube_token.json
+tiktok_session.json
+
+# Configuration with sensitive data
+data/settings.json
+
+# Output files
+output/*.mp4
+output/*.json
+
+# Cache and temporary files
+data/audio_cache/*.mp3
+assets/temp/**
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+logs/*.log
+*.log
+
+# FFmpeg temp files
+temp_*.mp4
+
+# Python build
+*.egg-info/
+dist/
+build/
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Database
+*.db
+*.sqlite3
+
+# OS
+Thumbs.db
+.DS_Store

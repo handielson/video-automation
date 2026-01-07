@@ -1,0 +1,24 @@
+{
+  "current_month": "2026-01",
+  "openai": {
+    "tokens": 0,
+    "cost": 0.0
+  },
+  "gemini": {
+    "requests": 2,
+    "cost": 0.0
+  },
+  "elevenlabs": {
+    "characters": 1299,
+    "cost": 0.0
+  },
+  "google_tts": {
+    "characters": 0,
+    "cost": 0.0
+  },
+  "total_cost": 0.0,
+  "videos_generated": 2,
+  "daily_costs": {},
+  "monthly_limit": 50.0,
+  "daily_limit": 5.0
+}
