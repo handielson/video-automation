@@ -98,11 +98,20 @@ const App: React.FC = () => {
         setProject(prev => ({ ...prev, videoUrl, status: 'ready' }));
       } catch (videoErr: any) {
         console.error("Video generation failed:", videoErr);
-        if (videoErr.message?.includes("Requested entity was not found")) {
+
+        // Check if it's a quota error
+        if (videoErr.message?.includes("quota") || videoErr.message?.includes("429") || videoErr.message?.includes("RESOURCE_EXHAUSTED")) {
+          setError("⚠️ Quota de geração de vídeo esgotada. O roteiro e áudio foram gerados com sucesso! Aguarde o reset da quota ou tente novamente mais tarde.");
+        } else if (videoErr.message?.includes("Requested entity was not found")) {
+          setError("❌ API key não encontrada. Por favor, configure sua API key do Gemini.");
           // @ts-ignore
           if (window.aistudio?.openSelectKey) await window.aistudio.openSelectKey();
+        } else {
+          setError(`❌ Erro ao gerar vídeo: ${videoErr.message}. O roteiro e áudio foram gerados com sucesso.`);
         }
-        setProject(prev => ({ ...prev, status: 'ready' }));
+
+        // Mark as error, not ready, so user knows something went wrong
+        setProject(prev => ({ ...prev, status: 'error' }));
       }
 
     } catch (err: any) {
