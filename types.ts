@@ -1,4 +1,5 @@
 
+
 export enum VideoTone {
   IMPACTFUL = 'impactful',
   EDUCATIONAL = 'educational',
@@ -11,6 +12,8 @@ export enum VideoDuration {
   S45 = 45,
   S60 = 60
 }
+
+export type VideoProvider = 'antigravity' | 'gemini';
 
 export interface ScriptOutput {
   title: string;
@@ -28,7 +31,9 @@ export interface VideoProject {
   script?: ScriptOutput;
   audioUrl?: string;
   videoUrl?: string;
-  status: 'idle' | 'generating_script' | 'generating_audio' | 'generating_video' | 'ready' | 'error';
+  thumbnailUrl?: string;
+  videoProvider?: VideoProvider;
+  status: 'idle' | 'generating_script' | 'generating_audio' | 'generating_video' | 'generating_thumbnail' | 'ready' | 'error';
 }
 
 export interface VoiceOption {

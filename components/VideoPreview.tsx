@@ -5,11 +5,12 @@ import { Play, Pause, RefreshCw, Download, Share2 } from 'lucide-react';
 interface VideoPreviewProps {
   videoUrl?: string;
   audioUrl?: string;
+  thumbnailUrl?: string;
   text: string;
   onReset: () => void;
 }
 
-export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, text, onReset }) => {
+export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, thumbnailUrl, text, onReset }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -102,6 +103,24 @@ export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, 
           <Download size={18} /> Exportar
         </button>
       </div>
+
+      {thumbnailUrl && (
+        <div className="w-full space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-zinc-400">🎨 Thumbnail Gerada</span>
+            <a
+              href={thumbnailUrl}
+              download="thumbnail.png"
+              className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1"
+            >
+              <Download size={14} /> Baixar
+            </a>
+          </div>
+          <div className="aspect-video w-full bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800">
+            <img src={thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-3 w-full">
         {['TikTok', 'Instagram', 'YouTube'].map(platform => (

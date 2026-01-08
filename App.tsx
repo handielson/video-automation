@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import {
   Zap,
@@ -16,19 +17,22 @@ import {
   Youtube,
   Instagram,
   Smartphone,
-  Bot
+  Bot,
+  Brain
 } from 'lucide-react';
-import { VideoProject, VideoTone, VideoDuration } from './types';
+import { VideoProject, VideoTone, VideoDuration, VideoProvider } from './types';
 import { TONE_OPTIONS, VOICE_OPTIONS } from './constants';
 import { GeminiService } from './services/geminiService';
+import { AntigravityService } from './services/antigravityService';
 import { VideoPreview } from './components/VideoPreview';
 import { YoutubeSettings } from './components/YoutubeSettings';
 import { InstagramSettings } from './components/InstagramSettings';
 import { TiktokSettings } from './components/TiktokSettings';
 import { OAuthCallback } from './components/OAuthCallback';
 import { AutomationControl } from './components/AutomationControl';
+import { AISettings } from './components/AISettings';
 
-type View = 'dashboard' | 'videos' | 'history' | 'automation' | 'settings_youtube' | 'settings_instagram' | 'settings_tiktok';
+type View = 'dashboard' | 'videos' | 'history' | 'automation' | 'settings_ai' | 'settings_youtube' | 'settings_instagram' | 'settings_tiktok';
 
 const App: React.FC = () => {
   // Check if we're on the OAuth callback route
@@ -46,6 +50,9 @@ const App: React.FC = () => {
   });
 
   const [selectedVoice, setSelectedVoice] = useState(VOICE_OPTIONS[0].id);
+  const [videoProvider, setVideoProvider] = useState<VideoProvider>(
+    (localStorage.getItem('videoProvider') as VideoProvider) || 'antigravity'
+  );
   const [error, setError] = useState<string | null>(null);
   const [hasApiKey, setHasApiKey] = useState(false);
 
@@ -81,20 +88,38 @@ const App: React.FC = () => {
     }
 
     setError(null);
-    setProject(prev => ({ ...prev, status: 'generating_script' }));
+    setProject(prev => ({ ...prev, status: 'generating_script', videoProvider }));
 
+    const antigravity = new AntigravityService();
     const gemini = new GeminiService();
 
     try {
-      const script = await gemini.generateScript(project.theme, project.tone, project.duration);
-      setProject(prev => ({ ...prev, script, status: 'generating_audio' }));
+      // Step 1: Generate script with Antigravity
+      console.log('🤖 Using Antigravity for script generation');
+      const script = await antigravity.generateScript(project.theme, project.tone, project.duration);
+      setProject(prev => ({ ...prev, script, status: 'generating_thumbnail' }));
 
+      // Step 2: Generate thumbnail with Antigravity
+      console.log('🎨 Generating thumbnail with Antigravity');
+      const thumbnailData = await antigravity.generateThumbnail(project.theme);
+      setProject(prev => ({ ...prev, thumbnailUrl: thumbnailData.url, status: 'generating_audio' }));
+
+      // Step 3: Generate audio with Gemini TTS
+      console.log('🎤 Generating audio with Gemini TTS');
       const fullText = `${script.hook} ${script.body} ${script.cta}`;
       const audioUrl = await gemini.generateAudio(fullText, selectedVoice);
       setProject(prev => ({ ...prev, audioUrl, status: 'generating_video' }));
 
+      // Step 4: Generate video with selected provider
       try {
-        const videoUrl = await gemini.generateVideo(script.suggestedVisuals);
+        let videoUrl: string;
+        if (videoProvider === 'antigravity') {
+          console.log('🎬 Generating video with Antigravity (unlimited)');
+          videoUrl = await antigravity.generateVideo(script.suggestedVisuals, '9:16');
+        } else {
+          console.log('🎬 Generating video with Gemini Veo (premium)');
+          videoUrl = await gemini.generateVideo(script.suggestedVisuals);
+        }
         setProject(prev => ({ ...prev, videoUrl, status: 'ready' }));
       } catch (videoErr: any) {
         console.error("Video generation failed:", videoErr);
@@ -142,6 +167,8 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (currentView) {
+      case 'settings_ai':
+        return <AISettings />;
       case 'settings_youtube':
         return <YoutubeSettings />;
       case 'settings_instagram':
@@ -257,6 +284,46 @@ const App: React.FC = () => {
                     ))}
                   </div>
                 </div>
+
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-zinc-400 flex items-center gap-2">
+                    🎬 5. GERADOR DE VÍDEO
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => {
+                        setVideoProvider('antigravity');
+                        localStorage.setItem('videoProvider', 'antigravity');
+                      }}
+                      className={`p-4 rounded-xl border text-sm font-medium transition-all flex flex-col items-start gap-2 ${videoProvider === 'antigravity' ? 'border-purple-500 bg-purple-500/10 text-purple-400' : 'border-zinc-800 bg-zinc-900 text-zinc-500 hover:border-zinc-700'}`}
+                      disabled={project.status !== 'idle' && project.status !== 'error'}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
+                          ∞
+                        </div>
+                        <span className="font-bold">Antigravity</span>
+                      </div>
+                      <span className="text-xs text-zinc-400">Ilimitado • Rápido</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setVideoProvider('gemini');
+                        localStorage.setItem('videoProvider', 'gemini');
+                      }}
+                      className={`p-4 rounded-xl border text-sm font-medium transition-all flex flex-col items-start gap-2 ${videoProvider === 'gemini' ? 'border-purple-500 bg-purple-500/10 text-purple-400' : 'border-zinc-800 bg-zinc-900 text-zinc-500 hover:border-zinc-700'}`}
+                      disabled={project.status !== 'idle' && project.status !== 'error'}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                          ✨
+                        </div>
+                        <span className="font-bold">Gemini Veo</span>
+                      </div>
+                      <span className="text-xs text-zinc-400">Premium • Cinematográfico</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {error && (
@@ -286,23 +353,25 @@ const App: React.FC = () => {
                       <div>
                         <h3 className="text-xl font-bold mb-1">
                           {project.status === 'generating_script' && "Criando Roteiro Viral..."}
+                          {project.status === 'generating_thumbnail' && "Gerando Thumbnail..."}
                           {project.status === 'generating_audio' && "Narrando o Texto..."}
-                          {project.status === 'generating_video' && "Gerando Visual Cinematic..."}
+                          {project.status === 'generating_video' && `Gerando Vídeo (${project.videoProvider === 'antigravity' ? 'Antigravity' : 'Gemini Veo'})...`}
                         </h3>
                         <p className="text-zinc-500 text-sm">
-                          {project.status === 'generating_script' && "Etapa 1 de 3"}
-                          {project.status === 'generating_audio' && "Etapa 2 de 3"}
-                          {project.status === 'generating_video' && "Etapa 3 de 3"}
+                          {project.status === 'generating_script' && "Etapa 1 de 4"}
+                          {project.status === 'generating_thumbnail' && "Etapa 2 de 4"}
+                          {project.status === 'generating_audio' && "Etapa 3 de 4"}
+                          {project.status === 'generating_video' && "Etapa 4 de 4"}
                         </p>
                       </div>
 
-                      {/* Progress Bar */}
                       <div className="w-full">
                         <div className="flex justify-between text-xs text-zinc-400 mb-2">
                           <span>Progresso</span>
                           <span className="font-bold text-purple-400">
-                            {project.status === 'generating_script' && "33%"}
-                            {project.status === 'generating_audio' && "66%"}
+                            {project.status === 'generating_script' && "25%"}
+                            {project.status === 'generating_thumbnail' && "50%"}
+                            {project.status === 'generating_audio' && "75%"}
                             {project.status === 'generating_video' && "99%"}
                           </span>
                         </div>
@@ -310,8 +379,9 @@ const App: React.FC = () => {
                           <div
                             className="h-full bg-gradient-to-r from-purple-600 to-pink-600 transition-all duration-500 ease-out"
                             style={{
-                              width: project.status === 'generating_script' ? '33%' :
-                                project.status === 'generating_audio' ? '66%' : '99%'
+                              width: project.status === 'generating_script' ? '25%' :
+                                project.status === 'generating_thumbnail' ? '50%' :
+                                  project.status === 'generating_audio' ? '75%' : '99%'
                             }}
                           />
                         </div>
@@ -351,6 +421,7 @@ const App: React.FC = () => {
                 <VideoPreview
                   audioUrl={project.audioUrl}
                   videoUrl={project.videoUrl}
+                  thumbnailUrl={project.thumbnailUrl}
                   text={`${project.script.hook} ${project.script.body} ${project.script.cta}`}
                   onReset={resetProject}
                 />
@@ -410,6 +481,14 @@ const App: React.FC = () => {
           >
             <Bot size={18} /> Automação IA
           </button>
+
+          <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest px-4 mt-6 mb-2">Configurações</p>
+          <button
+            onClick={() => setCurrentView('settings_ai')}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'settings_ai' ? 'bg-zinc-900 text-purple-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
+          >
+            <Brain size={18} /> IAs
+          </button>
           <button
             onClick={() => setCurrentView('settings_youtube')}
             className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'settings_youtube' ? 'bg-zinc-900 text-red-500' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
@@ -448,6 +527,7 @@ const App: React.FC = () => {
             <h1 className="text-2xl font-bold mb-1">
               {currentView === 'dashboard' && 'Gerador Viral'}
               {currentView === 'automation' && 'Automação Inteligente'}
+              {currentView === 'settings_ai' && 'Configurações de IA'}
               {currentView === 'settings_youtube' && 'Automação YouTube'}
               {currentView === 'settings_instagram' && 'Automação Instagram'}
               {currentView === 'settings_tiktok' && 'Automação TikTok'}
@@ -457,6 +537,7 @@ const App: React.FC = () => {
             <p className="text-zinc-500 text-sm">
               {currentView === 'dashboard' && 'Crie conteúdos que prendem a atenção.'}
               {currentView === 'automation' && 'IA gera vídeos virais automaticamente 24/7.'}
+              {currentView === 'settings_ai' && 'Configure as chaves de API e preferências das IAs.'}
               {currentView === 'settings_youtube' && 'Configure seu canal e postagens automáticas.'}
               {currentView === 'settings_instagram' && 'Gerencie seus Reels e integrações.'}
               {currentView === 'settings_tiktok' && 'Domine o algoritmo com postagens cronometradas.'}

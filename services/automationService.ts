@@ -1,8 +1,9 @@
 import { GeminiService } from './geminiService';
+import { AntigravityService } from './antigravityService';
 import { YouTubeService } from './youtubeService';
 import { ViralContentService } from './viralContentService';
 import { TrendingTopicsService, TrendingTopic } from './trendingTopicsService';
-import { VideoTone, VideoDuration } from '../types';
+import { VideoTone, VideoDuration, VideoProvider } from '../types';
 
 export interface AutomationConfig {
     enabled: boolean;
@@ -10,6 +11,7 @@ export interface AutomationConfig {
     niche?: string;
     dailyTopicsCount: number;
     autoApprove: boolean;
+    videoProvider?: VideoProvider;
 }
 
 export interface VideoGenerationJob {
@@ -30,6 +32,7 @@ const QUEUE_KEY = 'viralshorts_video_queue';
 
 export class AutomationService {
     private geminiService: GeminiService;
+    private antigravityService: AntigravityService;
     private youtubeService: YouTubeService;
     private viralService: ViralContentService;
     private trendingService: TrendingTopicsService;
@@ -37,6 +40,7 @@ export class AutomationService {
 
     constructor() {
         this.geminiService = new GeminiService();
+        this.antigravityService = new AntigravityService();
         this.youtubeService = new YouTubeService();
         this.viralService = new ViralContentService();
         this.trendingService = new TrendingTopicsService();
@@ -57,7 +61,8 @@ export class AutomationService {
             enabled: false,
             mode: 'auto',
             dailyTopicsCount: 10,
-            autoApprove: false
+            autoApprove: false,
+            videoProvider: 'antigravity'
         };
     }
 
@@ -74,8 +79,9 @@ export class AutomationService {
         console.log('🤖 Starting automatic video generation...');
 
         try {
-            // Step 1: Get trending topic from AI
-            const topic = await this.trendingService.getTopicForNow(this.config.niche);
+            // Step 1: Get trending topic using Antigravity web search
+            console.log('🔍 Researching trending topics with Antigravity...');
+            const topic = await this.antigravityService.getTopicForNow(this.config.niche);
             console.log('📊 Trending topic selected:', topic.topic);
 
             // Step 2: Create job
@@ -90,44 +96,56 @@ export class AutomationService {
 
             this.addToQueue(job);
 
-            // Step 3: Generate script
-            console.log('📝 Generating script...');
-            const script = await this.geminiService.generateScript(
+            // Step 3: Generate script with Antigravity
+            console.log('📝 Generating script with Antigravity...');
+            const script = await this.antigravityService.generateScript(
                 topic.topic,
                 job.tone,
                 job.duration
             );
 
-            // Step 4: Generate viral metadata
-            console.log('🔥 Generating viral metadata...');
-            const metadata = await this.viralService.generateViralMetadata(
+            // Step 4: Generate viral metadata with Antigravity
+            console.log('🔥 Generating viral metadata with Antigravity...');
+            const metadata = await this.antigravityService.generateViralMetadata(
                 topic.topic,
                 job.tone
             );
 
-            // Step 5: Generate audio
-            console.log('🎤 Generating audio...');
-            const fullText = `${script.hook} ${script.body} ${script.cta}`;
-            const audioUrl = await this.geminiService.generateAudio(fullText, 'Aoede');
+            // Step 5: Generate thumbnail with Antigravity
+            console.log('🎨 Generating thumbnail with Antigravity...');
+            const thumbnailData = await this.antigravityService.generateThumbnail(topic.topic);
 
-            // Step 6: Generate video
-            console.log('🎬 Generating video...');
+            // Step 6: Generate audio with Gemini TTS
+            console.log('🎤 Generating audio with Gemini TTS...');
+            const fullText = `${script.hook} ${script.body} ${script.cta}`;
+            const audioUrl = await this.geminiService.generateAudio(fullText, 'Kore');
+
+            // Step 7: Generate video with selected provider
+            const videoProvider = this.config.videoProvider || 'antigravity';
             let videoUrl: string | undefined;
             try {
-                videoUrl = await this.geminiService.generateVideo(script.suggestedVisuals);
+                if (videoProvider === 'antigravity') {
+                    console.log('🎬 Generating video with Antigravity (unlimited)...');
+                    videoUrl = await this.antigravityService.generateVideo(script.suggestedVisuals, '9:16');
+                } else {
+                    console.log('🎬 Generating video with Gemini Veo (premium)...');
+                    videoUrl = await this.geminiService.generateVideo(script.suggestedVisuals);
+                }
             } catch (error) {
                 console.warn('Video generation failed, will use audio only:', error);
             }
 
-            // Step 7: Update job
+            // Step 8: Update job
             job.status = 'ready';
             job.completedAt = new Date();
             job.videoUrl = videoUrl;
             job.metadata = {
                 script,
                 viralMetadata: metadata,
+                thumbnailUrl: thumbnailData.url,
                 audioUrl,
-                trendingTopic: topic
+                trendingTopic: topic,
+                videoProvider
             };
 
             this.updateJobInQueue(job);
