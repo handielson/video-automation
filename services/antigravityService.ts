@@ -133,6 +133,8 @@ export class AntigravityService {
     /**
      * Generate a video using Antigravity AI (unlimited)
      * This is the default video provider with no quota limits
+     * 
+     * Note: Currently uses Gemini Veo as fallback until Antigravity video API is fully integrated
      */
     async generateVideo(
         prompt: string,
@@ -154,6 +156,20 @@ export class AntigravityService {
         }
 
         const data = await response.json();
+
+        // Check if proxy indicates frontend generation is needed
+        if (data.needsFrontendGeneration) {
+            console.log('⚠️ Antigravity video API not yet available, using Gemini Veo fallback...');
+
+            // Import and use Gemini Veo as fallback
+            const { GeminiService } = await import('./geminiService');
+            const gemini = new GeminiService();
+            const videoUrl = await gemini.generateVideo(prompt);
+
+            console.log('✅ Video generated successfully with Gemini Veo (fallback)');
+            return videoUrl;
+        }
+
         console.log('✅ Video generated successfully with Antigravity');
         return data.videoUrl;
     }
