@@ -70,6 +70,14 @@ export class GeminiService {
     const apiKey = await this.getApiKey();
     const ai = new GoogleGenAI({ apiKey });
 
+    // Handle random voice selection
+    let actualVoiceName = voiceName;
+    if (voiceName === 'random') {
+      const { getRandomVoice } = await import('../constants');
+      actualVoiceName = getRandomVoice();
+      console.log(`🎲 Random voice selected: ${actualVoiceName}`);
+    }
+
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text: `Diga de forma empolgada e rápida: ${text}` }] }],
@@ -77,7 +85,7 @@ export class GeminiService {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName }
+            prebuiltVoiceConfig: { voiceName: actualVoiceName }
           }
         }
       }

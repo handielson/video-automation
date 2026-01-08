@@ -10,8 +10,16 @@ export const TONE_OPTIONS = [
 ];
 
 export const VOICE_OPTIONS: VoiceOption[] = [
+  { id: 'random', name: '🎲 Aleatório', gender: 'M' },
   { id: 'Kore', name: 'Ricardo (Masculino)', gender: 'M' },
   { id: 'Puck', name: 'Juliana (Feminino)', gender: 'F' },
   { id: 'Charon', name: 'Marcos (Grave)', gender: 'M' },
   { id: 'Fenrir', name: 'Sofia (Suave)', gender: 'F' },
 ];
+
+// Helper function to get a random voice (excluding the 'random' option itself)
+export const getRandomVoice = (): string => {
+  const actualVoices = VOICE_OPTIONS.filter(v => v.id !== 'random');
+  const randomIndex = Math.floor(Math.random() * actualVoices.length);
+  return actualVoices[randomIndex].id;
+};
