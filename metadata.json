@@ -1,0 +1,8 @@
+{
+  "name": "ViralShorts AI",
+  "description": "Gerador de vídeos virais para TikTok, Reels e Shorts usando Inteligência Artificial. Crie roteiros, narrações e vídeos automáticos com legendas dinâmicas.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}

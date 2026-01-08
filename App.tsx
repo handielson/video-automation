@@ -1,0 +1,378 @@
+
+import React, { useState, useEffect } from 'react';
+import { 
+  Zap, 
+  Settings as SettingsIcon, 
+  LayoutDashboard, 
+  Video as VideoIcon, 
+  History, 
+  Sparkles,
+  ArrowRight,
+  Wand2,
+  Mic,
+  Clapperboard,
+  Loader2,
+  AlertCircle,
+  Youtube,
+  Instagram,
+  Smartphone
+} from 'lucide-react';
+import { VideoProject, VideoTone, VideoDuration } from './types';
+import { TONE_OPTIONS, VOICE_OPTIONS } from './constants';
+import { GeminiService } from './services/geminiService';
+import { VideoPreview } from './components/VideoPreview';
+import { YoutubeSettings } from './components/YoutubeSettings';
+import { InstagramSettings } from './components/InstagramSettings';
+import { TiktokSettings } from './components/TiktokSettings';
+
+type View = 'dashboard' | 'videos' | 'history' | 'settings_youtube' | 'settings_instagram' | 'settings_tiktok';
+
+const App: React.FC = () => {
+  const [currentView, setCurrentView] = useState<View>('dashboard');
+  const [project, setProject] = useState<VideoProject>({
+    id: Math.random().toString(36).substr(2, 9),
+    theme: '',
+    tone: VideoTone.IMPACTFUL,
+    duration: VideoDuration.S30,
+    status: 'idle'
+  });
+  
+  const [selectedVoice, setSelectedVoice] = useState(VOICE_OPTIONS[0].id);
+  const [error, setError] = useState<string | null>(null);
+  const [hasApiKey, setHasApiKey] = useState(false);
+
+  useEffect(() => {
+    const checkKey = async () => {
+      // @ts-ignore
+      if (window.aistudio?.hasSelectedApiKey) {
+        // @ts-ignore
+        const selected = await window.aistudio.hasSelectedApiKey();
+        setHasApiKey(selected);
+      } else {
+        setHasApiKey(true);
+      }
+    };
+    checkKey();
+  }, []);
+
+  const handleGenerate = async () => {
+    if (!project.theme) {
+      setError("Por favor, insira um tema para o vídeo.");
+      return;
+    }
+
+    // @ts-ignore
+    if (window.aistudio?.hasSelectedApiKey) {
+      // @ts-ignore
+      const selected = await window.aistudio.hasSelectedApiKey();
+      if (!selected) {
+        // @ts-ignore
+        await window.aistudio.openSelectKey();
+        setHasApiKey(true);
+      }
+    }
+
+    setError(null);
+    setProject(prev => ({ ...prev, status: 'generating_script' }));
+
+    const gemini = new GeminiService();
+
+    try {
+      const script = await gemini.generateScript(project.theme, project.tone, project.duration);
+      setProject(prev => ({ ...prev, script, status: 'generating_audio' }));
+
+      const fullText = `${script.hook} ${script.body} ${script.cta}`;
+      const audioUrl = await gemini.generateAudio(fullText, selectedVoice);
+      setProject(prev => ({ ...prev, audioUrl, status: 'generating_video' }));
+
+      try {
+        const videoUrl = await gemini.generateVideo(script.suggestedVisuals);
+        setProject(prev => ({ ...prev, videoUrl, status: 'ready' }));
+      } catch (videoErr: any) {
+        console.error("Video generation failed:", videoErr);
+        if (videoErr.message?.includes("Requested entity was not found")) {
+          // @ts-ignore
+          if (window.aistudio?.openSelectKey) await window.aistudio.openSelectKey();
+        }
+        setProject(prev => ({ ...prev, status: 'ready' }));
+      }
+      
+    } catch (err: any) {
+      setError(err.message || "Ocorreu um erro na geração.");
+      setProject(prev => ({ ...prev, status: 'error' }));
+    }
+  };
+
+  const resetProject = () => {
+    setProject({
+      id: Math.random().toString(36).substr(2, 9),
+      theme: '',
+      tone: VideoTone.IMPACTFUL,
+      duration: VideoDuration.S30,
+      status: 'idle'
+    });
+    setError(null);
+  };
+
+  const handleOpenKey = async () => {
+    // @ts-ignore
+    if (window.aistudio?.openSelectKey) {
+      // @ts-ignore
+      await window.aistudio.openSelectKey();
+      setHasApiKey(true);
+    }
+  };
+
+  const renderContent = () => {
+    switch (currentView) {
+      case 'settings_youtube':
+        return <YoutubeSettings />;
+      case 'settings_instagram':
+        return <InstagramSettings />;
+      case 'settings_tiktok':
+        return <TiktokSettings />;
+      case 'videos':
+        return (
+          <div className="flex flex-col items-center justify-center h-[60vh] text-zinc-500">
+            <VideoIcon size={48} className="mb-4 opacity-20" />
+            <p>Você ainda não tem vídeos gerados.</p>
+          </div>
+        );
+      case 'history':
+        return (
+          <div className="flex flex-col items-center justify-center h-[60vh] text-zinc-500">
+            <History size={48} className="mb-4 opacity-20" />
+            <p>Seu histórico de atividades aparecerá aqui.</p>
+          </div>
+        );
+      default:
+        return (
+          <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+            <section className="space-y-8">
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-zinc-400 flex items-center gap-2">
+                    <Wand2 size={16} /> 1. SOBRE O QUE É O VÍDEO?
+                  </label>
+                  <textarea 
+                    value={project.theme}
+                    onChange={(e) => setProject({...project, theme: e.target.value})}
+                    placeholder="Ex: Curiosidades sobre o espaço que vão explodir sua mente..."
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 focus:ring-2 focus:ring-purple-500 outline-none transition-all h-32 resize-none text-lg"
+                    disabled={project.status !== 'idle' && project.status !== 'error'}
+                  />
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-zinc-400">2. TOM DO VÍDEO</label>
+                    <select 
+                      value={project.tone}
+                      onChange={(e) => setProject({...project, tone: e.target.value as VideoTone})}
+                      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 outline-none focus:ring-2 focus:ring-purple-500 transition-all appearance-none"
+                      disabled={project.status !== 'idle'}
+                    >
+                      {TONE_OPTIONS.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-sm font-semibold text-zinc-400">3. DURAÇÃO</label>
+                    <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl p-1">
+                      {[30, 45, 60].map(dur => (
+                        <button 
+                          key={dur}
+                          onClick={() => setProject({...project, duration: dur})}
+                          className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${project.duration === dur ? 'bg-zinc-800 text-white shadow-inner' : 'text-zinc-500 hover:text-zinc-300'}`}
+                          disabled={project.status !== 'idle'}
+                        >
+                          {dur}s
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-zinc-400 flex items-center gap-2">
+                    <Mic size={16} /> 4. ESCOLHER VOZ (TTS)
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {VOICE_OPTIONS.map(voice => (
+                      <button 
+                        key={voice.id}
+                        onClick={() => setSelectedVoice(voice.id)}
+                        className={`p-3 rounded-xl border text-sm font-medium transition-all flex flex-col items-center gap-2 ${selectedVoice === voice.id ? 'border-purple-500 bg-purple-500/10 text-purple-400' : 'border-zinc-800 bg-zinc-900 text-zinc-500 hover:border-zinc-700'}`}
+                        disabled={project.status !== 'idle'}
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${voice.gender === 'M' ? 'bg-blue-500/20 text-blue-400' : 'bg-pink-500/20 text-pink-400'}`}>
+                          {voice.gender}
+                        </div>
+                        {voice.name.split(' ')[0]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/50 p-4 rounded-2xl flex items-center gap-3 text-red-500">
+                  <AlertCircle size={20} />
+                  <p className="text-sm font-medium">{error}</p>
+                </div>
+              )}
+
+              {project.status === 'idle' || project.status === 'error' ? (
+                <button 
+                  onClick={handleGenerate}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-6 rounded-2xl font-bold text-xl shadow-xl shadow-purple-600/20 flex items-center justify-center gap-3 group transition-all transform active:scale-[0.98]"
+                >
+                  Gerar Vídeo Viral <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              ) : (
+                <div className="space-y-6">
+                  <div className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col items-center gap-4 text-center">
+                    <div className="relative">
+                      <Loader2 size={48} className="text-purple-500 animate-spin" />
+                      <Sparkles size={20} className="absolute -top-1 -right-1 text-pink-500 animate-pulse" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold mb-1">
+                        {project.status === 'generating_script' && "Criando Roteiro Viral..."}
+                        {project.status === 'generating_audio' && "Narrando o Texto..."}
+                        {project.status === 'generating_video' && "Gerando Visual Cinematic..."}
+                      </h3>
+                      <p className="text-zinc-500">Isso pode levar alguns segundos...</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section className="bg-zinc-950/50 rounded-[2.5rem] border border-zinc-900 p-8 flex flex-col items-center justify-center min-h-[600px] relative overflow-hidden">
+              {project.status === 'ready' && project.script ? (
+                <VideoPreview 
+                  audioUrl={project.audioUrl}
+                  videoUrl={project.videoUrl}
+                  text={`${project.script.hook} ${project.script.body} ${project.script.cta}`}
+                  onReset={resetProject}
+                />
+              ) : (
+                <div className="text-center space-y-6 max-w-xs relative z-10">
+                  <div className="w-20 h-20 bg-zinc-900 rounded-3xl flex items-center justify-center mx-auto border border-zinc-800 text-zinc-700">
+                    <Clapperboard size={32} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2">Pré-visualização</h3>
+                    <p className="text-zinc-500 text-sm">Configure o vídeo à esquerda e clique em gerar para ver o resultado aqui.</p>
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-black text-white flex">
+      {/* Sidebar */}
+      <aside className="w-64 border-r border-zinc-800 p-6 flex flex-col gap-6 hidden md:flex">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
+            <Zap className="text-white fill-white" size={24} />
+          </div>
+          <span className="font-bold text-xl tracking-tight">ViralShorts</span>
+        </div>
+
+        <nav className="flex flex-col gap-1">
+          <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest px-4 mb-2">Principal</p>
+          <button 
+            onClick={() => setCurrentView('dashboard')}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'dashboard' ? 'bg-zinc-900 text-purple-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
+          >
+            <LayoutDashboard size={18} /> Dashboard
+          </button>
+          <button 
+            onClick={() => setCurrentView('videos')}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'videos' ? 'bg-zinc-900 text-purple-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
+          >
+            <VideoIcon size={18} /> Meus Vídeos
+          </button>
+          <button 
+            onClick={() => setCurrentView('history')}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'history' ? 'bg-zinc-900 text-purple-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
+          >
+            <History size={18} /> Histórico
+          </button>
+          
+          <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest px-4 mt-6 mb-2">Automação e Redes</p>
+          <button 
+            onClick={() => setCurrentView('settings_youtube')}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'settings_youtube' ? 'bg-zinc-900 text-red-500' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
+          >
+            <Youtube size={18} /> YouTube Shorts
+          </button>
+          <button 
+            onClick={() => setCurrentView('settings_instagram')}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'settings_instagram' ? 'bg-zinc-900 text-pink-500' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
+          >
+            <Instagram size={18} /> Instagram Reels
+          </button>
+          <button 
+            onClick={() => setCurrentView('settings_tiktok')}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'settings_tiktok' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
+          >
+            <Smartphone size={18} /> TikTok
+          </button>
+        </nav>
+
+        <div className="mt-auto p-4 bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 rounded-2xl relative overflow-hidden group">
+          <div className="relative z-10">
+            <p className="text-xs font-bold text-purple-400 uppercase tracking-wider mb-2">Plano Pro</p>
+            <p className="text-sm text-zinc-300 mb-3">Automação total e sem limites.</p>
+            <button className="w-full bg-white text-black py-2 rounded-lg text-sm font-bold hover:bg-zinc-200 transition-colors">
+              Upgrade
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Conteúdo Principal */}
+      <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <header className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-2xl font-bold mb-1">
+              {currentView === 'dashboard' && 'Gerador Viral'}
+              {currentView === 'settings_youtube' && 'Automação YouTube'}
+              {currentView === 'settings_instagram' && 'Automação Instagram'}
+              {currentView === 'settings_tiktok' && 'Automação TikTok'}
+              {currentView === 'videos' && 'Galeria de Vídeos'}
+              {currentView === 'history' && 'Histórico'}
+            </h1>
+            <p className="text-zinc-500 text-sm">
+              {currentView === 'dashboard' && 'Crie conteúdos que prendem a atenção.'}
+              {currentView === 'settings_youtube' && 'Configure seu canal e postagens automáticas.'}
+              {currentView === 'settings_instagram' && 'Gerencie seus Reels e integrações.'}
+              {currentView === 'settings_tiktok' && 'Domine o algoritmo com postagens cronometradas.'}
+            </p>
+          </div>
+          {!hasApiKey && (
+            <button 
+              onClick={handleOpenKey}
+              className="bg-zinc-800 border border-zinc-700 px-4 py-2 rounded-full text-xs font-medium hover:bg-zinc-700 flex items-center gap-2"
+            >
+              <AlertCircle size={14} className="text-yellow-500" />
+              API Key Pendente
+            </button>
+          )}
+        </header>
+
+        {renderContent()}
+      </main>
+    </div>
+  );
+};
+
+export default App;
