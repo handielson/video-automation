@@ -24,7 +24,16 @@ export const AISettings: React.FC = () => {
         const savedConfig = localStorage.getItem('ai_config');
         if (savedConfig) {
             try {
-                setConfig(JSON.parse(savedConfig));
+                const loaded = JSON.parse(savedConfig);
+                setConfig(loaded);
+
+                // Auto-set success status if keys are configured
+                if (loaded.geminiApiKey) {
+                    setTestResults(prev => ({ ...prev, gemini: 'success' }));
+                }
+                if (loaded.antigravityEnabled) {
+                    setTestResults(prev => ({ ...prev, antigravity: 'success' }));
+                }
             } catch (e) {
                 console.error('Failed to load AI config:', e);
             }
@@ -120,7 +129,14 @@ export const AISettings: React.FC = () => {
                             <Sparkles className="text-purple-400" size={24} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold">Antigravity AI</h2>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-xl font-bold">Antigravity AI</h2>
+                                {testResults.antigravity === 'success' && (
+                                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full border border-green-500/30">
+                                        CONECTADA
+                                    </span>
+                                )}
+                            </div>
                             <p className="text-sm text-zinc-400">Geração ilimitada de conteúdo</p>
                         </div>
                     </div>
@@ -186,7 +202,14 @@ export const AISettings: React.FC = () => {
                             <Wand2 className="text-blue-400" size={24} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-bold">Google Gemini API</h2>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-xl font-bold">Google Gemini API</h2>
+                                {testResults.gemini === 'success' && (
+                                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full border border-green-500/30">
+                                        CONECTADA
+                                    </span>
+                                )}
+                            </div>
                             <p className="text-sm text-zinc-400">TTS de áudio e Veo para vídeos premium</p>
                         </div>
                     </div>
@@ -254,8 +277,8 @@ export const AISettings: React.FC = () => {
                     <button
                         onClick={() => setConfig({ ...config, defaultVideoProvider: 'antigravity' })}
                         className={`p-4 rounded-xl border-2 transition-all ${config.defaultVideoProvider === 'antigravity'
-                                ? 'border-purple-500 bg-purple-500/10'
-                                : 'border-zinc-700 hover:border-zinc-600'
+                            ? 'border-purple-500 bg-purple-500/10'
+                            : 'border-zinc-700 hover:border-zinc-600'
                             }`}
                     >
                         <div className="flex items-center gap-2 mb-2">
@@ -270,8 +293,8 @@ export const AISettings: React.FC = () => {
                     <button
                         onClick={() => setConfig({ ...config, defaultVideoProvider: 'gemini' })}
                         className={`p-4 rounded-xl border-2 transition-all ${config.defaultVideoProvider === 'gemini'
-                                ? 'border-blue-500 bg-blue-500/10'
-                                : 'border-zinc-700 hover:border-zinc-600'
+                            ? 'border-blue-500 bg-blue-500/10'
+                            : 'border-zinc-700 hover:border-zinc-600'
                             }`}
                     >
                         <div className="flex items-center gap-2 mb-2">
