@@ -113,7 +113,7 @@ export class GeminiService {
     const ai = new GoogleGenAI({ apiKey });
 
     let operation = await ai.models.generateVideos({
-      model: 'veo-3.1-fast-generate-preview',
+      model: 'veo-3.1-fast-generate-preview', // Using Fast mode explicitly
       prompt: `Cinematic loop, high quality, 4k, no text, ${prompt}`,
       config: {
         numberOfVideos: 1,
@@ -132,7 +132,7 @@ export class GeminiService {
     if (!downloadLink) throw new Error("Video URI not found in response");
 
     // Fix: Fetch video from download link by appending the API key as required by guidelines
-    const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
+    const response = await fetch(`${downloadLink}&key=${apiKey}`);
     const blob = await response.blob();
     return URL.createObjectURL(blob);
   }
