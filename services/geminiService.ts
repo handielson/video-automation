@@ -1,8 +1,15 @@
 
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { ScriptOutput, VideoTone, VideoDuration } from "../types";
+import { ViralContentService } from "./viralContentService";
 
 export class GeminiService {
+  private viralService: ViralContentService;
+
+  constructor() {
+    this.viralService = new ViralContentService();
+  }
+
   // Fix: Create fresh AI instance before calls to ensure up-to-date API key per guidelines
   private get ai() {
     return new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -52,7 +59,7 @@ export class GeminiService {
 
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     if (!base64Audio) throw new Error("Falha ao gerar áudio");
-    
+
     // Note: PCM audio often requires a container (like WAV) for browser <audio> tags.
     // We return the raw PCM base64 here for direct usage.
     return `data:audio/pcm;base64,${base64Audio}`;

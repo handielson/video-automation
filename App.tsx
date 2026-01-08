@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Zap, 
-  Settings as SettingsIcon, 
-  LayoutDashboard, 
-  Video as VideoIcon, 
-  History, 
+import {
+  Zap,
+  Settings as SettingsIcon,
+  LayoutDashboard,
+  Video as VideoIcon,
+  History,
   Sparkles,
   ArrowRight,
   Wand2,
@@ -24,10 +24,16 @@ import { VideoPreview } from './components/VideoPreview';
 import { YoutubeSettings } from './components/YoutubeSettings';
 import { InstagramSettings } from './components/InstagramSettings';
 import { TiktokSettings } from './components/TiktokSettings';
+import { OAuthCallback } from './components/OAuthCallback';
 
 type View = 'dashboard' | 'videos' | 'history' | 'settings_youtube' | 'settings_instagram' | 'settings_tiktok';
 
 const App: React.FC = () => {
+  // Check if we're on the OAuth callback route
+  if (window.location.pathname === '/oauth/callback') {
+    return <OAuthCallback />;
+  }
+
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [project, setProject] = useState<VideoProject>({
     id: Math.random().toString(36).substr(2, 9),
@@ -36,7 +42,7 @@ const App: React.FC = () => {
     duration: VideoDuration.S30,
     status: 'idle'
   });
-  
+
   const [selectedVoice, setSelectedVoice] = useState(VOICE_OPTIONS[0].id);
   const [error, setError] = useState<string | null>(null);
   const [hasApiKey, setHasApiKey] = useState(false);
@@ -96,7 +102,7 @@ const App: React.FC = () => {
         }
         setProject(prev => ({ ...prev, status: 'ready' }));
       }
-      
+
     } catch (err: any) {
       setError(err.message || "Ocorreu um erro na geração.");
       setProject(prev => ({ ...prev, status: 'error' }));
@@ -154,9 +160,9 @@ const App: React.FC = () => {
                   <label className="text-sm font-semibold text-zinc-400 flex items-center gap-2">
                     <Wand2 size={16} /> 1. SOBRE O QUE É O VÍDEO?
                   </label>
-                  <textarea 
+                  <textarea
                     value={project.theme}
-                    onChange={(e) => setProject({...project, theme: e.target.value})}
+                    onChange={(e) => setProject({ ...project, theme: e.target.value })}
                     placeholder="Ex: Curiosidades sobre o espaço que vão explodir sua mente..."
                     className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-4 focus:ring-2 focus:ring-purple-500 outline-none transition-all h-32 resize-none text-lg"
                     disabled={project.status !== 'idle' && project.status !== 'error'}
@@ -166,9 +172,9 @@ const App: React.FC = () => {
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <label className="text-sm font-semibold text-zinc-400">2. TOM DO VÍDEO</label>
-                    <select 
+                    <select
                       value={project.tone}
-                      onChange={(e) => setProject({...project, tone: e.target.value as VideoTone})}
+                      onChange={(e) => setProject({ ...project, tone: e.target.value as VideoTone })}
                       className="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-3 outline-none focus:ring-2 focus:ring-purple-500 transition-all appearance-none"
                       disabled={project.status !== 'idle'}
                     >
@@ -181,9 +187,9 @@ const App: React.FC = () => {
                     <label className="text-sm font-semibold text-zinc-400">3. DURAÇÃO</label>
                     <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl p-1">
                       {[30, 45, 60].map(dur => (
-                        <button 
+                        <button
                           key={dur}
-                          onClick={() => setProject({...project, duration: dur})}
+                          onClick={() => setProject({ ...project, duration: dur })}
                           className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${project.duration === dur ? 'bg-zinc-800 text-white shadow-inner' : 'text-zinc-500 hover:text-zinc-300'}`}
                           disabled={project.status !== 'idle'}
                         >
@@ -200,7 +206,7 @@ const App: React.FC = () => {
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {VOICE_OPTIONS.map(voice => (
-                      <button 
+                      <button
                         key={voice.id}
                         onClick={() => setSelectedVoice(voice.id)}
                         className={`p-3 rounded-xl border text-sm font-medium transition-all flex flex-col items-center gap-2 ${selectedVoice === voice.id ? 'border-purple-500 bg-purple-500/10 text-purple-400' : 'border-zinc-800 bg-zinc-900 text-zinc-500 hover:border-zinc-700'}`}
@@ -224,7 +230,7 @@ const App: React.FC = () => {
               )}
 
               {project.status === 'idle' || project.status === 'error' ? (
-                <button 
+                <button
                   onClick={handleGenerate}
                   className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-6 rounded-2xl font-bold text-xl shadow-xl shadow-purple-600/20 flex items-center justify-center gap-3 group transition-all transform active:scale-[0.98]"
                 >
@@ -252,7 +258,7 @@ const App: React.FC = () => {
 
             <section className="bg-zinc-950/50 rounded-[2.5rem] border border-zinc-900 p-8 flex flex-col items-center justify-center min-h-[600px] relative overflow-hidden">
               {project.status === 'ready' && project.script ? (
-                <VideoPreview 
+                <VideoPreview
                   audioUrl={project.audioUrl}
                   videoUrl={project.videoUrl}
                   text={`${project.script.hook} ${project.script.body} ${project.script.cta}`}
@@ -288,39 +294,39 @@ const App: React.FC = () => {
 
         <nav className="flex flex-col gap-1">
           <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest px-4 mb-2">Principal</p>
-          <button 
+          <button
             onClick={() => setCurrentView('dashboard')}
             className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'dashboard' ? 'bg-zinc-900 text-purple-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
           >
             <LayoutDashboard size={18} /> Dashboard
           </button>
-          <button 
+          <button
             onClick={() => setCurrentView('videos')}
             className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'videos' ? 'bg-zinc-900 text-purple-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
           >
             <VideoIcon size={18} /> Meus Vídeos
           </button>
-          <button 
+          <button
             onClick={() => setCurrentView('history')}
             className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'history' ? 'bg-zinc-900 text-purple-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
           >
             <History size={18} /> Histórico
           </button>
-          
+
           <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest px-4 mt-6 mb-2">Automação e Redes</p>
-          <button 
+          <button
             onClick={() => setCurrentView('settings_youtube')}
             className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'settings_youtube' ? 'bg-zinc-900 text-red-500' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
           >
             <Youtube size={18} /> YouTube Shorts
           </button>
-          <button 
+          <button
             onClick={() => setCurrentView('settings_instagram')}
             className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'settings_instagram' ? 'bg-zinc-900 text-pink-500' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
           >
             <Instagram size={18} /> Instagram Reels
           </button>
-          <button 
+          <button
             onClick={() => setCurrentView('settings_tiktok')}
             className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'settings_tiktok' ? 'bg-zinc-900 text-white' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
           >
@@ -359,7 +365,7 @@ const App: React.FC = () => {
             </p>
           </div>
           {!hasApiKey && (
-            <button 
+            <button
               onClick={handleOpenKey}
               className="bg-zinc-800 border border-zinc-700 px-4 py-2 rounded-full text-xs font-medium hover:bg-zinc-700 flex items-center gap-2"
             >
