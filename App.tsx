@@ -188,7 +188,31 @@ const App: React.FC = () => {
                     </select>
                   </div>
                   <div className="space-y-3">
-                    <label className="text-sm font-semibold text-zinc-400">3. DURAÇÃO</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-semibold text-zinc-400">3. DURAÇÃO</label>
+                      <div className="group relative">
+                        <div className="text-zinc-500 hover:text-zinc-300 cursor-help text-xs bg-zinc-800 px-2 py-1 rounded-lg">
+                          ℹ️ Qual escolher?
+                        </div>
+                        <div className="absolute right-0 top-full mt-2 w-80 bg-zinc-900 border border-zinc-700 rounded-xl p-4 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                          <p className="text-xs font-bold text-purple-400 mb-2">📊 Recomendações:</p>
+                          <div className="space-y-2 text-xs text-zinc-300">
+                            <div className="flex items-start gap-2">
+                              <span className="text-green-400 font-bold">30s:</span>
+                              <span>Melhor retenção (85-95%). Ideal para humor e fatos rápidos.</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="text-purple-400 font-bold">45s:</span>
+                              <span>⭐ Recomendado! Equilíbrio perfeito. Ótimo para curiosidades.</span>
+                            </div>
+                            <div className="flex items-start gap-2">
+                              <span className="text-blue-400 font-bold">60s:</span>
+                              <span>Storytelling completo. Melhor para conteúdo educativo.</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <div className="flex bg-zinc-900 border border-zinc-800 rounded-xl p-1">
                       {[30, 45, 60].map(dur => (
                         <button
