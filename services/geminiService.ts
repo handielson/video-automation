@@ -10,18 +10,41 @@ export class GeminiService {
     this.viralService = new ViralContentService();
   }
 
-  // Fix: Create fresh AI instance before calls to ensure up-to-date API key per guidelines
-  private get ai() {
-    return new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Get API key asynchronously for AI Studio compatibility
+  private async getApiKey(): Promise<string> {
+    // Try AI Studio first (when running in AI Studio environment)
+    // @ts-ignore - AI Studio provides the API key
+    if (typeof window !== 'undefined' && window.aistudio?.getSelectedApiKey) {
+      // @ts-ignore
+      const key = await window.aistudio.getSelectedApiKey();
+      if (key) return key;
+    }
+
+    // Try Vite environment variable (local development)
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) {
+      // @ts-ignore
+      const key = import.meta.env.VITE_GEMINI_API_KEY;
+      if (key && key !== 'PLACEHOLDER_API_KEY') return key;
+    }
+
+    // Try Node.js environment variable (serverless/production)
+    if (typeof process !== 'undefined' && process.env?.API_KEY) {
+      return process.env.API_KEY;
+    }
+
+    throw new Error('❌ API key not configured!\n\nPlease add your Gemini API key to .env.local:\nVITE_GEMINI_API_KEY=your_api_key_here\n\nGet your API key at: https://aistudio.google.com/apikey');
   }
 
   async generateScript(theme: string, tone: VideoTone, duration: VideoDuration): Promise<ScriptOutput> {
+    const apiKey = await this.getApiKey();
+    const ai = new GoogleGenAI({ apiKey });
     const prompt = `Gere um roteiro viral para um vídeo curto de ${duration} segundos em português sobre o tema: "${theme}". 
     O tom deve ser ${tone}. 
     Divida em: Título, Gancho (3 primeiros segundos), Corpo e CTA (Call to Action).
     Também sugira uma descrição visual para a IA gerar o vídeo de fundo.`;
 
-    const response = await this.ai.models.generateContent({
+    const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: prompt,
       config: {
@@ -44,7 +67,10 @@ export class GeminiService {
   }
 
   async generateAudio(text: string, voiceName: string): Promise<string> {
-    const response = await this.ai.models.generateContent({
+    const apiKey = await this.getApiKey();
+    const ai = new GoogleGenAI({ apiKey });
+
+    const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text: `Diga de forma empolgada e rápida: ${text}` }] }],
       config: {
@@ -66,7 +92,9 @@ export class GeminiService {
   }
 
   async generateVideo(prompt: string): Promise<string> {
-    const ai = this.ai;
+    const apiKey = await this.getApiKey();
+    const ai = new GoogleGenAI({ apiKey });
+
     let operation = await ai.models.generateVideos({
       model: 'veo-3.1-fast-generate-preview',
       prompt: `Cinematic loop, high quality, 4k, no text, ${prompt}`,
