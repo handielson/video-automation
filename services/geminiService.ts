@@ -20,6 +20,15 @@ export class GeminiService {
       if (key) return key;
     }
 
+    // Try localStorage (from AI Settings page)
+    if (typeof window !== 'undefined' && localStorage) {
+      const savedKey = localStorage.getItem('VITE_GEMINI_API_KEY');
+      if (savedKey && savedKey !== 'PLACEHOLDER_API_KEY') {
+        console.log('✅ Using Gemini API key from localStorage');
+        return savedKey;
+      }
+    }
+
     // Try Vite environment variable (local development)
     // @ts-ignore
     if (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GEMINI_API_KEY) {
