@@ -15,7 +15,8 @@ import {
   AlertCircle,
   Youtube,
   Instagram,
-  Smartphone
+  Smartphone,
+  Bot
 } from 'lucide-react';
 import { VideoProject, VideoTone, VideoDuration } from './types';
 import { TONE_OPTIONS, VOICE_OPTIONS } from './constants';
@@ -25,8 +26,9 @@ import { YoutubeSettings } from './components/YoutubeSettings';
 import { InstagramSettings } from './components/InstagramSettings';
 import { TiktokSettings } from './components/TiktokSettings';
 import { OAuthCallback } from './components/OAuthCallback';
+import { AutomationControl } from './components/AutomationControl';
 
-type View = 'dashboard' | 'videos' | 'history' | 'settings_youtube' | 'settings_instagram' | 'settings_tiktok';
+type View = 'dashboard' | 'videos' | 'history' | 'automation' | 'settings_youtube' | 'settings_instagram' | 'settings_tiktok';
 
 const App: React.FC = () => {
   // Check if we're on the OAuth callback route
@@ -137,6 +139,8 @@ const App: React.FC = () => {
         return <InstagramSettings />;
       case 'settings_tiktok':
         return <TiktokSettings />;
+      case 'automation':
+        return <AutomationControl />;
       case 'videos':
         return (
           <div className="flex flex-col items-center justify-center h-[60vh] text-zinc-500">
@@ -315,6 +319,12 @@ const App: React.FC = () => {
 
           <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest px-4 mt-6 mb-2">Automação e Redes</p>
           <button
+            onClick={() => setCurrentView('automation')}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'automation' ? 'bg-zinc-900 text-purple-400' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
+          >
+            <Bot size={18} /> Automação IA
+          </button>
+          <button
             onClick={() => setCurrentView('settings_youtube')}
             className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all font-medium text-sm ${currentView === 'settings_youtube' ? 'bg-zinc-900 text-red-500' : 'text-zinc-500 hover:text-white hover:bg-zinc-900/50'}`}
           >
@@ -351,6 +361,7 @@ const App: React.FC = () => {
           <div>
             <h1 className="text-2xl font-bold mb-1">
               {currentView === 'dashboard' && 'Gerador Viral'}
+              {currentView === 'automation' && 'Automação Inteligente'}
               {currentView === 'settings_youtube' && 'Automação YouTube'}
               {currentView === 'settings_instagram' && 'Automação Instagram'}
               {currentView === 'settings_tiktok' && 'Automação TikTok'}
@@ -359,6 +370,7 @@ const App: React.FC = () => {
             </h1>
             <p className="text-zinc-500 text-sm">
               {currentView === 'dashboard' && 'Crie conteúdos que prendem a atenção.'}
+              {currentView === 'automation' && 'IA gera vídeos virais automaticamente 24/7.'}
               {currentView === 'settings_youtube' && 'Configure seu canal e postagens automáticas.'}
               {currentView === 'settings_instagram' && 'Gerencie seus Reels e integrações.'}
               {currentView === 'settings_tiktok' && 'Domine o algoritmo com postagens cronometradas.'}

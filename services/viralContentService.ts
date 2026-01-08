@@ -12,8 +12,10 @@ export class ViralContentService {
 
     constructor() {
         // @ts-ignore - AI Studio provides the API key
-        const apiKey = window.aistudio?.getSelectedApiKey?.() || import.meta.env.VITE_GEMINI_API_KEY || 'PLACEHOLDER_API_KEY';
-        this.genai = new GoogleGenAI(apiKey);
+        const apiKey = typeof window !== 'undefined' && window.aistudio?.getSelectedApiKey?.()
+            || (typeof process !== 'undefined' && process.env?.API_KEY)
+            || 'PLACEHOLDER_API_KEY';
+        this.genai = new GoogleGenAI({ apiKey });
     }
 
     async generateViralMetadata(topic: string, tone: string): Promise<ViralMetadata> {
