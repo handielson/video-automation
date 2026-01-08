@@ -266,18 +266,71 @@ const App: React.FC = () => {
                 </button>
               ) : (
                 <div className="space-y-6">
-                  <div className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col items-center gap-4 text-center">
+                  <div className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col items-center gap-6 text-center">
                     <div className="relative">
                       <Loader2 size={48} className="text-purple-500 animate-spin" />
                       <Sparkles size={20} className="absolute -top-1 -right-1 text-pink-500 animate-pulse" />
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-1">
-                        {project.status === 'generating_script' && "Criando Roteiro Viral..."}
-                        {project.status === 'generating_audio' && "Narrando o Texto..."}
-                        {project.status === 'generating_video' && "Gerando Visual Cinematic..."}
-                      </h3>
-                      <p className="text-zinc-500">Isso pode levar alguns segundos...</p>
+
+                    {/* Progress Steps */}
+                    <div className="w-full max-w-md space-y-4">
+                      <div>
+                        <h3 className="text-xl font-bold mb-1">
+                          {project.status === 'generating_script' && "Criando Roteiro Viral..."}
+                          {project.status === 'generating_audio' && "Narrando o Texto..."}
+                          {project.status === 'generating_video' && "Gerando Visual Cinematic..."}
+                        </h3>
+                        <p className="text-zinc-500 text-sm">
+                          {project.status === 'generating_script' && "Etapa 1 de 3"}
+                          {project.status === 'generating_audio' && "Etapa 2 de 3"}
+                          {project.status === 'generating_video' && "Etapa 3 de 3"}
+                        </p>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full">
+                        <div className="flex justify-between text-xs text-zinc-400 mb-2">
+                          <span>Progresso</span>
+                          <span className="font-bold text-purple-400">
+                            {project.status === 'generating_script' && "33%"}
+                            {project.status === 'generating_audio' && "66%"}
+                            {project.status === 'generating_video' && "99%"}
+                          </span>
+                        </div>
+                        <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-purple-600 to-pink-600 transition-all duration-500 ease-out"
+                            style={{
+                              width: project.status === 'generating_script' ? '33%' :
+                                project.status === 'generating_audio' ? '66%' : '99%'
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Step Indicators */}
+                      <div className="flex justify-between items-center text-xs">
+                        <div className={`flex flex-col items-center gap-1 ${project.status === 'generating_script' ? 'text-purple-400' : 'text-green-500'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${project.status === 'generating_script' ? 'bg-purple-500/20 animate-pulse' : 'bg-green-500/20'}`}>
+                            {project.status === 'generating_script' ? '⏳' : '✓'}
+                          </div>
+                          <span className="font-medium">Roteiro</span>
+                        </div>
+                        <div className="flex-1 h-px bg-zinc-700 mx-2" />
+                        <div className={`flex flex-col items-center gap-1 ${project.status === 'generating_audio' ? 'text-purple-400' : project.status === 'generating_video' || project.status === 'ready' ? 'text-green-500' : 'text-zinc-600'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${project.status === 'generating_audio' ? 'bg-purple-500/20 animate-pulse' : project.status === 'generating_video' || project.status === 'ready' ? 'bg-green-500/20' : 'bg-zinc-800'}`}>
+                            {project.status === 'generating_audio' ? '⏳' : project.status === 'generating_video' || project.status === 'ready' ? '✓' : '🎤'}
+                          </div>
+                          <span className="font-medium">Áudio</span>
+                        </div>
+                        <div className="flex-1 h-px bg-zinc-700 mx-2" />
+                        <div className={`flex flex-col items-center gap-1 ${project.status === 'generating_video' ? 'text-purple-400' : project.status === 'ready' ? 'text-green-500' : 'text-zinc-600'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${project.status === 'generating_video' ? 'bg-purple-500/20 animate-pulse' : project.status === 'ready' ? 'bg-green-500/20' : 'bg-zinc-800'}`}>
+                            {project.status === 'generating_video' ? '⏳' : project.status === 'ready' ? '✓' : '🎬'}
+                          </div>
+                          <span className="font-medium">Vídeo</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -304,7 +357,7 @@ const App: React.FC = () => {
                 </div>
               )}
             </section>
-          </div>
+          </div >
         );
     }
   };
