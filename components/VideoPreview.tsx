@@ -33,11 +33,37 @@ export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, 
       videoRef.current?.pause();
       audioRef.current?.pause();
     } else {
+      // Sync both video and audio
       videoRef.current?.play();
       audioRef.current?.play();
     }
     setIsPlaying(!isPlaying);
   };
+
+  // Sync video and audio on mount
+  useEffect(() => {
+    const video = videoRef.current;
+    const audio = audioRef.current;
+
+    if (video && audio) {
+      // Sync audio with video time
+      const syncAudio = () => {
+        if (Math.abs((video.currentTime || 0) - (audio.currentTime || 0)) > 0.3) {
+          audio.currentTime = video.currentTime || 0;
+        }
+      };
+
+      video.addEventListener('timeupdate', syncAudio);
+      video.addEventListener('play', () => audio?.play());
+      video.addEventListener('pause', () => audio?.pause());
+
+      return () => {
+        video.removeEventListener('timeupdate', syncAudio);
+        video.removeEventListener('play', () => audio?.play());
+        video.removeEventListener('pause', () => audio?.pause());
+      };
+    }
+  }, [videoUrl, audioUrl]);
 
   const currentWordIndex = Math.floor(currentTime / wordDuration);
 
@@ -50,7 +76,7 @@ export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, 
           src={videoUrl || "https://assets.mixkit.co/videos/preview/mixkit-abstract-flowing-gold-particles-3453-large.mp4"}
           className="w-full h-full object-cover"
           loop
-          muted
+          muted={!audioUrl}
         />
 
         {/* Captions Overlay - Positioned at Bottom */}
