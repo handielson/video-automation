@@ -24,8 +24,27 @@ export class ElevenLabsService {
     async generateAudio(text: string, voiceId: string = 'pNInz6obpgDQGcFmaJgB'): Promise<string> {
         const apiKey = await this.getApiKey();
 
+        // Available ElevenLabs voices
+        const availableVoices = [
+            'pNInz6obpgDQGcFmaJgB', // Adam
+            'EXAVITQu4vr4xnSDxMaL', // Sarah
+            'ErXwobaYiN019PkySvjV', // Antoni
+            'VR6AewLTigWG4xSOukaG', // Arnold
+            'MF3mGyEYCl7XYWbV9V6O', // Elli
+            'TxGEqnHWrfWFTfGW9XjX', // Josh
+            'D38z5RcWu1voky8WS1ja', // Fin
+            'IKne3meq5aSn9XLyUdCD', // Charlie
+        ];
+
+        // Handle random voice selection
+        let actualVoiceId = voiceId;
+        if (voiceId === 'random') {
+            actualVoiceId = availableVoices[Math.floor(Math.random() * availableVoices.length)];
+            console.log(`🎲 Random voice selected: ${actualVoiceId}`);
+        }
+
         // ElevenLabs API endpoint
-        const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`;
+        const url = `https://api.elevenlabs.io/v1/text-to-speech/${actualVoiceId}`;
 
         const response = await fetch(url, {
             method: 'POST',
