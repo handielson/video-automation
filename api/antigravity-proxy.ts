@@ -1,5 +1,6 @@
 // Vercel Serverless Function - Proxy to Antigravity AI
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { PexelsService } from '../services/pexelsService';
 
 /**
  * This serverless function acts as a proxy to Antigravity AI.
@@ -191,8 +192,7 @@ async function handleGenerateVideo(
 
         console.log('✅ Pexels API key received (length:', pexelsApiKey.length, ')');
 
-        // Import Pexels service
-        const { PexelsService } = await import('../services/pexelsService');
+        // Create Pexels service instance
         const pexels = new PexelsService(pexelsApiKey);
 
         console.log('🎬 Generating video with Pexels...');
