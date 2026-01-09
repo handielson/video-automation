@@ -483,7 +483,7 @@ const App: React.FC = () => {
                 </div>
               )}
             </section>
-          </div >
+          </div>
         );
     }
   };
