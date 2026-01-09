@@ -22,6 +22,8 @@ export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, 
   const [currentTime, setCurrentTime] = useState(0);
   const [promptCopied, setPromptCopied] = useState(false);
   const [scriptExpanded, setScriptExpanded] = useState(false);
+  const [exportStatus, setExportStatus] = useState<string>('');
+  const [isExporting, setIsExporting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -34,15 +36,37 @@ export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, 
   };
 
   const handleExport = async () => {
-    if (!videoUrl || !audioUrl) return;
+    if (!videoUrl || !audioUrl || !text) return;
 
-    // Download video
-    const link = document.createElement('a');
-    link.href = videoUrl;
-    link.download = `viralshorts-${Date.now()}.mp4`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    setIsExporting(true);
+    setExportStatus('Preparando vídeo...');
+
+    try {
+      const { VideoProcessingService } = await import('../services/videoProcessingService');
+      const videoService = new VideoProcessingService();
+
+      // Calculate duration (estimate based on text length)
+      const wordCount = text.split(' ').length;
+      const estimatedDuration = wordCount * 0.35; // 0.35s per word
+
+      await videoService.exportVideo(
+        videoUrl,
+        audioUrl,
+        text,
+        estimatedDuration,
+        (status) => setExportStatus(status)
+      );
+
+      setExportStatus('');
+      setIsExporting(false);
+    } catch (error: any) {
+      console.error('Export failed:', error);
+      setExportStatus('Erro ao exportar. Tente novamente.');
+      setTimeout(() => {
+        setExportStatus('');
+        setIsExporting(false);
+      }, 3000);
+    }
   };
 
   const words = text.split(' ');
@@ -157,10 +181,19 @@ export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, 
         </button>
         <button
           onClick={handleExport}
-          disabled={!videoUrl}
+          disabled={!videoUrl || isExporting}
           className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-3 rounded-xl transition-all shadow-lg shadow-purple-500/20 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Download size={18} /> Exportar
+          {isExporting ? (
+            <>
+              <div className="animate-spin">⏳</div>
+              {exportStatus || 'Exportando...'}
+            </>
+          ) : (
+            <>
+              <Download size={18} /> Exportar
+            </>
+          )}
         </button>
       </div>
 
