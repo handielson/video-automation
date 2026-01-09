@@ -21,9 +21,10 @@ import {
   Brain
 } from 'lucide-react';
 import { VideoProject, VideoTone, VideoDuration, VideoProvider } from './types';
-import { TONE_OPTIONS, VOICE_OPTIONS } from './constants';
+import { TONE_OPTIONS, GEMINI_VOICE_OPTIONS, ELEVENLABS_VOICE_OPTIONS } from './constants';
 import { GeminiService } from './services/geminiService';
 import { AntigravityService } from './services/antigravityService';
+import { ElevenLabsService } from './services/elevenlabsService';
 import { VideoPreview } from './components/VideoPreview';
 import { YoutubeSettings } from './components/YoutubeSettings';
 import { InstagramSettings } from './components/InstagramSettings';
@@ -49,12 +50,18 @@ const App: React.FC = () => {
     status: 'idle'
   });
 
-  const [selectedVoice, setSelectedVoice] = useState(VOICE_OPTIONS[0].id);
+  const [selectedVoice, setSelectedVoice] = useState(GEMINI_VOICE_OPTIONS[0].id);
+  const [ttsProvider, setTtsProvider] = useState<'gemini' | 'elevenlabs'>(
+    (localStorage.getItem('ttsProvider') as 'gemini' | 'elevenlabs') || 'gemini'
+  );
   const [videoProvider, setVideoProvider] = useState<VideoProvider>(
     (localStorage.getItem('videoProvider') as VideoProvider) || 'antigravity'
   );
   const [error, setError] = useState<string | null>(null);
   const [hasApiKey, setHasApiKey] = useState(false);
+
+  // Get current voice options based on TTS provider
+  const currentVoiceOptions = ttsProvider === 'elevenlabs' ? ELEVENLABS_VOICE_OPTIONS : GEMINI_VOICE_OPTIONS;
 
   useEffect(() => {
     const checkKey = async () => {
@@ -104,10 +111,16 @@ const App: React.FC = () => {
       const thumbnailData = await antigravity.generateThumbnail(project.theme);
       setProject(prev => ({ ...prev, thumbnailUrl: thumbnailData.url, status: 'generating_audio' }));
 
-      // Step 3: Generate audio with Gemini TTS
-      console.log('🎤 Generating audio with Gemini TTS');
+      // Step 3: Generate audio with selected TTS provider
+      console.log(`🎤 Generating audio with ${ttsProvider === 'elevenlabs' ? 'ElevenLabs' : 'Gemini TTS'}`);
       const fullText = `${script.hook} ${script.body} ${script.cta}`;
-      const audioUrl = await gemini.generateAudio(fullText, selectedVoice);
+      let audioUrl: string;
+      if (ttsProvider === 'elevenlabs') {
+        const elevenlabs = new ElevenLabsService();
+        audioUrl = await elevenlabs.generateAudio(fullText, selectedVoice);
+      } else {
+        audioUrl = await gemini.generateAudio(fullText, selectedVoice);
+      }
       setProject(prev => ({ ...prev, audioUrl, status: 'generating_video' }));
 
       // Step 4: Generate video with selected provider
@@ -269,8 +282,38 @@ const App: React.FC = () => {
                   <label className="text-sm font-semibold text-zinc-400 flex items-center gap-2">
                     <Mic size={16} /> 4. ESCOLHER VOZ (TTS)
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {VOICE_OPTIONS.map(voice => (
+
+                  {/* TTS Provider Selection */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <button
+                      onClick={() => {
+                        setTtsProvider('gemini');
+                        localStorage.setItem('ttsProvider', 'gemini');
+                        setSelectedVoice(GEMINI_VOICE_OPTIONS[0].id);
+                      }}
+                      className={`p-3 rounded-xl border text-sm font-medium transition-all ${ttsProvider === 'gemini' ? 'border-purple-500 bg-purple-500/10 text-purple-400' : 'border-zinc-800 bg-zinc-900 text-zinc-500 hover:border-zinc-700'}`}
+                      disabled={project.status !== 'idle' && project.status !== 'error'}
+                    >
+                      <div className="font-bold">Gemini TTS</div>
+                      <div className="text-xs text-zinc-400">Gratuito • Rápido</div>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setTtsProvider('elevenlabs');
+                        localStorage.setItem('ttsProvider', 'elevenlabs');
+                        setSelectedVoice(ELEVENLABS_VOICE_OPTIONS[0].id);
+                      }}
+                      className={`p-3 rounded-xl border text-sm font-medium transition-all ${ttsProvider === 'elevenlabs' ? 'border-purple-500 bg-purple-500/10 text-purple-400' : 'border-zinc-800 bg-zinc-900 text-zinc-500 hover:border-zinc-700'}`}
+                      disabled={project.status !== 'idle' && project.status !== 'error'}
+                    >
+                      <div className="font-bold">ElevenLabs</div>
+                      <div className="text-xs text-zinc-400">Premium • Ultra Realista</div>
+                    </button>
+                  </div>
+
+                  {/* Voice Selection */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {currentVoiceOptions.map(voice => (
                       <button
                         key={voice.id}
                         onClick={() => setSelectedVoice(voice.id)}
@@ -280,7 +323,7 @@ const App: React.FC = () => {
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${voice.gender === 'M' ? 'bg-blue-500/20 text-blue-400' : 'bg-pink-500/20 text-pink-400'}`}>
                           {voice.gender}
                         </div>
-                        {voice.name.split(' ')[0]}
+                        <span className="text-xs text-center leading-tight">{voice.name}</span>
                       </button>
                     ))}
                   </div>

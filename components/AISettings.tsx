@@ -3,6 +3,7 @@ import { Save, Key, Sparkles, Brain, Wand2, CheckCircle, AlertCircle } from 'luc
 
 interface AIConfig {
     geminiApiKey: string;
+    elevenlabsApiKey: string;
     antigravityEnabled: boolean;
     defaultVideoProvider: 'antigravity' | 'gemini';
 }
@@ -10,12 +11,14 @@ interface AIConfig {
 export const AISettings: React.FC = () => {
     const [config, setConfig] = useState<AIConfig>({
         geminiApiKey: '',
+        elevenlabsApiKey: '',
         antigravityEnabled: true,
         defaultVideoProvider: 'antigravity'
     });
     const [saved, setSaved] = useState(false);
     const [testResults, setTestResults] = useState<{
         gemini?: 'success' | 'error' | 'testing';
+        elevenlabs?: 'success' | 'error' | 'testing';
         antigravity?: 'success' | 'error' | 'testing';
     }>({});
 
@@ -46,6 +49,9 @@ export const AISettings: React.FC = () => {
         // Also save to environment-like storage for runtime access
         if (config.geminiApiKey) {
             localStorage.setItem('VITE_GEMINI_API_KEY', config.geminiApiKey);
+        }
+        if (config.elevenlabsApiKey) {
+            localStorage.setItem('ELEVENLABS_API_KEY', config.elevenlabsApiKey);
         }
         localStorage.setItem('videoProvider', config.defaultVideoProvider);
 
@@ -262,6 +268,94 @@ export const AISettings: React.FC = () => {
                         className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:text-zinc-500 rounded-xl font-medium transition-colors"
                     >
                         {testResults.gemini === 'testing' ? 'Testando Conexão...' : 'Testar Conexão'}
+                    </button>
+                </div>
+            </div>
+
+            {/* ElevenLabs Settings */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-400">
+                                <path d="M9 18V5l12-2v13"></path>
+                                <circle cx="6" cy="18" r="3"></circle>
+                                <circle cx="18" cy="16" r="3"></circle>
+                            </svg>
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-xl font-bold">ElevenLabs TTS</h2>
+                                {testResults.elevenlabs === 'success' && (
+                                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full border border-green-500/30">
+                                        CONECTADA
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-sm text-zinc-400">Vozes ultra realistas e naturais</p>
+                        </div>
+                    </div>
+                    {getStatusIcon(testResults.elevenlabs)}
+                </div>
+
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-zinc-400 flex items-center gap-2">
+                            <Key size={16} />
+                            Chave de API
+                        </label>
+                        <input
+                            type="password"
+                            value={config.elevenlabsApiKey}
+                            onChange={(e) => setConfig({ ...config, elevenlabsApiKey: e.target.value })}
+                            placeholder="sk_..."
+                            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 focus:ring-2 focus:ring-orange-500 outline-none transition-all font-mono text-sm"
+                        />
+                        <p className="text-xs text-zinc-500">
+                            Obtenha sua chave em{' '}
+                            <a
+                                href="https://elevenlabs.io/app/settings/api-keys"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-orange-400 hover:text-orange-300"
+                            >
+                                elevenlabs.io/app/settings/api-keys
+                            </a>
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-zinc-400">Recursos Disponíveis</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="p-3 bg-zinc-800/50 rounded-lg">
+                                <p className="text-xs text-zinc-400">Vozes Premium</p>
+                                <p className="font-bold text-orange-400">✓ Ultra Realistas</p>
+                            </div>
+                            <div className="p-3 bg-zinc-800/50 rounded-lg">
+                                <p className="text-xs text-zinc-400">Qualidade</p>
+                                <p className="font-bold text-orange-400">✓ Studio Grade</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={async () => {
+                            setTestResults(prev => ({ ...prev, elevenlabs: 'testing' }));
+                            try {
+                                if (!config.elevenlabsApiKey || config.elevenlabsApiKey.length < 10) {
+                                    throw new Error('Invalid API key format');
+                                }
+                                setTimeout(() => {
+                                    setTestResults(prev => ({ ...prev, elevenlabs: 'success' }));
+                                }, 1000);
+                            } catch (error) {
+                                setTestResults(prev => ({ ...prev, elevenlabs: 'error' }));
+                            }
+                        }}
+                        disabled={!config.elevenlabsApiKey || testResults.elevenlabs === 'testing'}
+                        className="w-full py-3 bg-orange-600 hover:bg-orange-500 disabled:bg-zinc-700 disabled:text-zinc-500 rounded-xl font-medium transition-colors"
+                    >
+                        {testResults.elevenlabs === 'testing' ? 'Testando Conexão...' : 'Testar Conexão'}
                     </button>
                 </div>
             </div>

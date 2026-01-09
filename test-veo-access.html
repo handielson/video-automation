@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Acesso Veo 3.1 - Google AI Ultra</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #fff;
+        }
+
+        .container {
+            background: #1a1a1a;
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        h1 {
+            color: #8b5cf6;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-family: monospace;
+        }
+
+        button {
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .success {
+            background: #10b98120;
+            border: 1px solid #10b981;
+            color: #10b981;
+        }
+
+        .error {
+            background: #ef444420;
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+
+        .info {
+            background: #3b82f620;
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #8b5cf6;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔍 Teste de Acesso Veo 3.1</h1>
+        <p class="subtitle">Verifique se sua API key do Google AI Ultra tem acesso ao Veo 3.1</p>
+
+        <label for="apiKey">Sua API Key do Gemini:</label>
+        <input type="password" id="apiKey" placeholder="AIza..." />
+
+        <button onclick="testVeoAccess()" id="testBtn">Testar Acesso ao Veo 3.1</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        import { GoogleGenAI } from "https://esm.run/@google/genai";
+
+        window.testVeoAccess = async function () {
+            const apiKey = document.getElementById('apiKey').value;
+            const resultDiv = document.getElementById('result');
+            const testBtn = document.getElementById('testBtn');
+
+            if (!apiKey) {
+                resultDiv.innerHTML = '<div class="result error">❌ Por favor, insira sua API key</div>';
+                return;
+            }
+
+            testBtn.disabled = true;
+            resultDiv.innerHTML = '<div class="result info"><span class="loading"></span> Testando geração de vídeo com Veo 3.1...</div>';
+
+            try {
+                const ai = new GoogleGenAI({ apiKey });
+
+                // Direct test: Try to generate a video
+                resultDiv.innerHTML = '<div class="result info">🎬 Iniciando geração de vídeo de teste...\n\nIsso pode levar alguns segundos...</div>';
+
+                const operation = await ai.models.generateVideos({
+                    model: 'veo-3.1-fast-generate-preview',
+                    prompt: 'A beautiful sunset over the ocean, cinematic, 4k',
+                    config: {
+                        numberOfVideos: 1,
+                        resolution: '720p',
+                        aspectRatio: '9:16'
+                    }
+                });
+
+                resultDiv.innerHTML = '<div class="result success">✅ SUCESSO! Vídeo iniciado!\n\n' +
+                    'Operation ID: ' + operation.name + '\n\n' +
+                    '🎉 Seu plano Google AI Ultra está funcionando!\n' +
+                    '✅ Você TEM acesso ao Veo 3.1 via API\n' +
+                    '✅ Pode usar geração ilimitada no seu app\n\n' +
+                    'Status: ' + (operation.done ? 'Concluído' : 'Processando...') +
+                    '</div>';
+
+            } catch (error) {
+                if (error.message.includes('quota') || error.message.includes('RESOURCE_EXHAUSTED')) {
+                    resultDiv.innerHTML = '<div class="result error">⚠️ QUOTA ESGOTADA\n\n' +
+                        'Sua API key TEM acesso ao Veo 3.1, mas:\n' +
+                        '❌ A quota diária foi esgotada\n\n' +
+                        'Soluções:\n' +
+                        '1. Aguardar 24h (quota reseta)\n' +
+                        '2. Verificar se seu plano Ultra está vinculado à API\n' +
+                        '3. Contatar suporte do Google para vincular créditos\n\n' +
+                        'Erro: ' + error.message +
+                        '</div>';
+                } else if (error.message.includes('permission') || error.message.includes('not found')) {
+                    resultDiv.innerHTML = '<div class="result error">❌ SEM ACESSO AO VEO 3.1\n\n' +
+                        'Sua API key NÃO tem acesso ao Veo 3.1.\n\n' +
+                        'Possíveis causas:\n' +
+                        '1. Plano Ultra não está vinculado à API key\n' +
+                        '2. Veo 3.1 não disponível via API (só no app)\n' +
+                        '3. Precisa ativar acesso no Google Cloud Console\n\n' +
+                        'Erro: ' + error.message +
+                        '</div>';
+                } else {
+                    resultDiv.innerHTML = '<div class="result error">❌ Erro ao testar:\n\n' +
+                        error.message + '\n\n' +
+                        'Stack: ' + (error.stack || 'N/A') +
+                        '</div>';
+                }
+            } finally {
+                testBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>
