@@ -4,6 +4,7 @@ import { Save, Key, Sparkles, Brain, Wand2, CheckCircle, AlertCircle } from 'luc
 interface AIConfig {
     geminiApiKey: string;
     elevenlabsApiKey: string;
+    pexelsApiKey: string;
     antigravityEnabled: boolean;
     defaultVideoProvider: 'antigravity' | 'gemini';
 }
@@ -12,6 +13,7 @@ export const AISettings: React.FC = () => {
     const [config, setConfig] = useState<AIConfig>({
         geminiApiKey: '',
         elevenlabsApiKey: '',
+        pexelsApiKey: '',
         antigravityEnabled: true,
         defaultVideoProvider: 'antigravity'
     });
@@ -52,6 +54,9 @@ export const AISettings: React.FC = () => {
         }
         if (config.elevenlabsApiKey) {
             localStorage.setItem('ELEVENLABS_API_KEY', config.elevenlabsApiKey);
+        }
+        if (config.pexelsApiKey) {
+            localStorage.setItem('PEXELS_API_KEY', config.pexelsApiKey);
         }
         localStorage.setItem('videoProvider', config.defaultVideoProvider);
 
@@ -357,6 +362,69 @@ export const AISettings: React.FC = () => {
                     >
                         {testResults.elevenlabs === 'testing' ? 'Testando Conexão...' : 'Testar Conexão'}
                     </button>
+                </div>
+            </div>
+
+            {/* Pexels Settings */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-6">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                            <Sparkles className="text-green-400" size={24} />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-xl font-bold">Pexels API</h2>
+                                {config.pexelsApiKey && (
+                                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs font-bold rounded-full border border-green-500/30">
+                                        CONFIGURADA
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-sm text-zinc-400">Vídeos stock ilimitados e gratuitos</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-zinc-400 flex items-center gap-2">
+                            <Key size={16} />
+                            Chave de API
+                        </label>
+                        <input
+                            type="password"
+                            value={config.pexelsApiKey}
+                            onChange={(e) => setConfig({ ...config, pexelsApiKey: e.target.value })}
+                            placeholder="Sua chave Pexels API..."
+                            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 focus:ring-2 focus:ring-green-500 outline-none transition-all font-mono text-sm"
+                        />
+                        <p className="text-xs text-zinc-500">
+                            Obtenha sua chave grátis em{' '}
+                            <a
+                                href="https://www.pexels.com/api/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-green-400 hover:text-green-300"
+                            >
+                                pexels.com/api
+                            </a>
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-zinc-400">Recursos Disponíveis</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="p-3 bg-zinc-800/50 rounded-lg">
+                                <p className="text-xs text-zinc-400">Vídeos</p>
+                                <p className="font-bold text-green-400">✓ Ilimitados</p>
+                            </div>
+                            <div className="p-3 bg-zinc-800/50 rounded-lg">
+                                <p className="text-xs text-zinc-400">Custo</p>
+                                <p className="font-bold text-green-400">✓ 100% Grátis</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
