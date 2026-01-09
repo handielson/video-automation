@@ -180,6 +180,7 @@ async function handleGenerateVideo(
     try {
         // Validate API key
         if (!pexelsApiKey) {
+            console.error('❌ No Pexels API key provided in request');
             return res.status(400).json({
                 success: false,
                 error: 'Pexels API key not provided',
@@ -187,6 +188,8 @@ async function handleGenerateVideo(
                 timestamp: new Date().toISOString()
             });
         }
+
+        console.log('✅ Pexels API key received (length:', pexelsApiKey.length, ')');
 
         // Import Pexels service
         const { PexelsService } = await import('../services/pexelsService');
@@ -216,13 +219,18 @@ async function handleGenerateVideo(
         });
     } catch (error: any) {
         console.error('❌ Pexels video generation error:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name
+        });
 
         // If Pexels fails, return error (no fallback to Gemini Veo)
         return res.status(500).json({
             success: false,
             error: error.message,
             provider: 'pexels',
-            message: 'Failed to find suitable video on Pexels. Try a different prompt.',
+            message: `Failed to find suitable video on Pexels: ${error.message}`,
             timestamp: new Date().toISOString()
         });
     }
