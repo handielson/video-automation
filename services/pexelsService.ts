@@ -48,14 +48,27 @@ export class PexelsService {
             this.client = createClient(apiKey);
         }
 
-        const response = await this.client.videos.search({
-            query,
-            orientation,
-            size,
-            per_page: 10
-        });
+        console.log(`🔍 Pexels search: "${query}" (${orientation})`);
 
-        return response;
+        try {
+            const response = await this.client.videos.search({
+                query,
+                orientation,
+                size,
+                per_page: 10
+            });
+
+            console.log(`📊 Pexels results: ${response.videos?.length || 0} videos found`);
+
+            if (response.videos && response.videos.length > 0) {
+                console.log(`✅ First video: ${response.videos[0].id}`);
+            }
+
+            return response;
+        } catch (error: any) {
+            console.error('❌ Pexels API error:', error);
+            throw new Error(`Pexels API error: ${error.message || 'Unknown error'}`);
+        }
     }
 
     /**
@@ -99,7 +112,16 @@ export class PexelsService {
             'céu': 'sky',
             'natureza': 'nature',
             'animal': 'animal',
+            'animais': 'animals',
+            'cachorro': 'dog',
+            'cachorros': 'dogs',
+            'gato': 'cat',
+            'gatos': 'cats',
+            'pássaro': 'bird',
+            'pássaros': 'birds',
+            'peixe': 'fish',
             'pessoa': 'person',
+            'pessoas': 'people',
             'tecnologia': 'technology',
             'comida': 'food',
             'viagem': 'travel',
@@ -128,8 +150,10 @@ export class PexelsService {
             'pulando': 'jumping',
             // Common words
             'sobre': 'about',
-            'curiosidades': 'curiosities',
+            'curiosidades': 'curiosity',
+            'curiosidade': 'curiosity',
             'fatos': 'facts',
+            'fato': 'fact',
             'história': 'history',
             'mistério': 'mystery',
             'segredo': 'secret'
@@ -144,7 +168,7 @@ export class PexelsService {
         }
 
         // Extract main keywords (remove common filler words)
-        const fillerWords = ['o', 'a', 'os', 'as', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 'nos', 'nas', 'sobre', 'about', 'the', 'of', 'in', 'on'];
+        const fillerWords = ['o', 'a', 'os', 'as', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 'nos', 'nas', 'sobre', 'about', 'the', 'of', 'in', 'on', 'curiosity'];
         const words = translated.split(/\s+/).filter(word => !fillerWords.includes(word) && word.length > 2);
 
         // Take first 2-3 most relevant keywords
@@ -166,9 +190,15 @@ export class PexelsService {
         // Translate and simplify prompt for better search results
         const searchQuery = this.translateToEnglish(prompt);
 
-        // Search for videos
+        // Try portrait first
         const orientation = aspectRatio === '9:16' ? 'portrait' : 'landscape';
-        const results = await this.searchVideos(searchQuery, orientation);
+        let results = await this.searchVideos(searchQuery, orientation);
+
+        // Fallback: if no portrait videos found, try landscape
+        if ((!results.videos || results.videos.length === 0) && orientation === 'portrait') {
+            console.log('⚠️ No portrait videos found, trying landscape...');
+            results = await this.searchVideos(searchQuery, 'landscape');
+        }
 
         if (!results.videos || results.videos.length === 0) {
             throw new Error(`No videos found for: ${prompt} (searched: ${searchQuery})`);
