@@ -140,7 +140,7 @@ export class AntigravityService {
         prompt: string,
         aspectRatio: '9:16' | '16:9' = '9:16'
     ): Promise<string> {
-        console.log('🎬 Generating video with Antigravity AI (unlimited)...');
+        console.log('🎬 Generating video with Pexels (unlimited)...');
 
         const response = await fetch(this.baseUrl, {
             method: 'POST',
@@ -152,25 +152,16 @@ export class AntigravityService {
         });
 
         if (!response.ok) {
-            throw new Error(`Antigravity API error: ${response.statusText}`);
+            throw new Error(`Pexels API error: ${response.statusText}`);
         }
 
         const data = await response.json();
 
-        // Check if proxy indicates frontend generation is needed
-        if (data.needsFrontendGeneration) {
-            console.log('⚠️ Antigravity video API not yet available, using Gemini Veo fallback...');
-
-            // Import and use Gemini Veo as fallback
-            const { GeminiService } = await import('./geminiService');
-            const gemini = new GeminiService();
-            const videoUrl = await gemini.generateVideo(prompt);
-
-            console.log('✅ Video generated successfully with Gemini Veo (fallback)');
-            return videoUrl;
+        if (!data.success || !data.videoUrl) {
+            throw new Error(data.message || 'Failed to generate video with Pexels');
         }
 
-        console.log('✅ Video generated successfully with Antigravity');
+        console.log('✅ Video generated successfully with Pexels!');
         return data.videoUrl;
     }
 

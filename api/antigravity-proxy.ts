@@ -168,7 +168,7 @@ async function handleGenerateThumbnail(
 
 /**
  * Generate video
- * Uses Antigravity's generate_image + FFmpeg to create videos
+ * Uses Pexels stock videos - unlimited and free!
  */
 async function handleGenerateVideo(
     req: VercelRequest,
@@ -178,63 +178,42 @@ async function handleGenerateVideo(
     const { prompt, aspectRatio } = payload;
 
     try {
-        // Import image-to-video utility
-        const { createVideoFromImage } = await import('../utils/imageToVideo');
+        // Import Pexels service
+        const { PexelsService } = await import('../services/pexelsService');
+        const pexels = new PexelsService();
 
-        // Generate high-quality image frame
-        console.log('🎨 Generating video frame with Antigravity...');
-        const imagePrompt = `Cinematic still frame: ${prompt}. High quality, 4K, professional photography, vibrant colors, dynamic composition`;
+        console.log('🎬 Generating video with Pexels...');
+        console.log('📝 Prompt:', prompt);
+        console.log('📐 Aspect Ratio:', aspectRatio);
 
-        // TODO: Replace this with actual generate_image call
-        // For now, using a placeholder that will be replaced
-        // const imageUrl = await generateImage(imagePrompt, 'video_frame');
-
-        // Temporary: Return placeholder response
-        // Once generate_image is integrated, this will work end-to-end
-        return res.status(200).json({
-            success: true,
-            videoUrl: null,
-            needsFrontendGeneration: true,
-            prompt: imagePrompt,
-            aspectRatio: aspectRatio,
-            provider: 'antigravity',
-            unlimited: true,
-            message: 'Image-to-video conversion ready. Awaiting generate_image integration.',
-            timestamp: new Date().toISOString()
-        });
-
-        /* 
-        // This will be enabled once generate_image is integrated:
-        
-        // Convert image to video with Ken Burns effect
-        console.log('🎬 Converting image to video with Ken Burns effect...');
-        const duration = 30; // Default 30 seconds
-        const videoBuffer = await createVideoFromImage(
-            imageUrl,
-            duration,
+        // Search for video on Pexels
+        const videoUrl = await pexels.generateVideoFromPrompt(
+            prompt,
             aspectRatio as '9:16' | '16:9'
         );
-        
-        // Convert buffer to blob URL or upload to storage
-        const videoUrl = `data:video/mp4;base64,${videoBuffer.toString('base64')}`;
-        
-        console.log('✅ Video generated successfully with Antigravity!');
-        
+
+        console.log('✅ Video found on Pexels!');
+        console.log('🔗 URL:', videoUrl);
+
         return res.status(200).json({
             success: true,
             videoUrl: videoUrl,
             needsFrontendGeneration: false,
-            provider: 'antigravity',
+            provider: 'pexels',
             unlimited: true,
+            message: 'Video generated successfully with Pexels stock footage',
             timestamp: new Date().toISOString()
         });
-        */
     } catch (error: any) {
-        console.error('Video generation error:', error);
+        console.error('❌ Pexels video generation error:', error);
+
+        // If Pexels fails, return error (no fallback to Gemini Veo)
         return res.status(500).json({
             success: false,
             error: error.message,
-            provider: 'antigravity'
+            provider: 'pexels',
+            message: 'Failed to find suitable video on Pexels. Try a different prompt.',
+            timestamp: new Date().toISOString()
         });
     }
 }
