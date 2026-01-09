@@ -223,8 +223,8 @@ const App: React.FC = () => {
                   />
                 </div>
 
-                <div className="grid sm:grid-cols-2 gap-6">
-                  <div className="space-y-3">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
                     <label className="text-sm font-semibold text-zinc-400">2. TOM DO VÍDEO</label>
                     <select
                       value={project.tone}
@@ -237,12 +237,12 @@ const App: React.FC = () => {
                       ))}
                     </select>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-semibold text-zinc-400">3. DURAÇÃO</label>
                       <div className="group relative">
                         <div className="text-zinc-500 hover:text-zinc-300 cursor-help text-xs bg-zinc-800 px-2 py-1 rounded-lg">
-                          ℹ️ Qual escolher?
+                          ℹ️
                         </div>
                         <div className="absolute right-0 top-full mt-2 w-80 bg-zinc-900 border border-zinc-700 rounded-xl p-4 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                           <p className="text-xs font-bold text-purple-400 mb-2">📊 Recomendações:</p>
@@ -343,12 +343,12 @@ const App: React.FC = () => {
                       disabled={project.status !== 'idle' && project.status !== 'error'}
                     >
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
-                          ∞
+                        <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
+                          📹
                         </div>
-                        <span className="font-bold">Antigravity</span>
+                        <span className="font-bold">Pexels</span>
                       </div>
-                      <span className="text-xs text-zinc-400">Ilimitado • Rápido</span>
+                      <span className="text-xs text-zinc-400">Stock • Ilimitado • Grátis</span>
                     </button>
                     <button
                       onClick={() => {
@@ -364,7 +364,7 @@ const App: React.FC = () => {
                         </div>
                         <span className="font-bold">Gemini Veo</span>
                       </div>
-                      <span className="text-xs text-zinc-400">Premium • Cinematográfico</span>
+                      <span className="text-xs text-zinc-400">IA Generativa • 10/dia</span>
                     </button>
                   </div>
                 </div>
