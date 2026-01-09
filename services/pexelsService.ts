@@ -83,6 +83,78 @@ export class PexelsService {
     }
 
     /**
+     * Simple translation helper for common Portuguese to English keywords
+     */
+    private translateToEnglish(prompt: string): string {
+        // Common Portuguese to English translations for video search
+        const translations: Record<string, string> = {
+            // Topics
+            'espaço': 'space',
+            'oceano': 'ocean',
+            'mar': 'sea',
+            'montanha': 'mountain',
+            'floresta': 'forest',
+            'cidade': 'city',
+            'praia': 'beach',
+            'céu': 'sky',
+            'natureza': 'nature',
+            'animal': 'animal',
+            'pessoa': 'person',
+            'tecnologia': 'technology',
+            'comida': 'food',
+            'viagem': 'travel',
+            'música': 'music',
+            'arte': 'art',
+            'esporte': 'sport',
+            'carro': 'car',
+            'avião': 'airplane',
+            'trem': 'train',
+            // Descriptors
+            'bonito': 'beautiful',
+            'incrível': 'amazing',
+            'fantástico': 'fantastic',
+            'rápido': 'fast',
+            'lento': 'slow',
+            'grande': 'big',
+            'pequeno': 'small',
+            'novo': 'new',
+            'velho': 'old',
+            'moderno': 'modern',
+            // Actions
+            'correndo': 'running',
+            'voando': 'flying',
+            'nadando': 'swimming',
+            'andando': 'walking',
+            'pulando': 'jumping',
+            // Common words
+            'sobre': 'about',
+            'curiosidades': 'curiosities',
+            'fatos': 'facts',
+            'história': 'history',
+            'mistério': 'mystery',
+            'segredo': 'secret'
+        };
+
+        let translated = prompt.toLowerCase();
+
+        // Replace Portuguese words with English
+        for (const [pt, en] of Object.entries(translations)) {
+            const regex = new RegExp(`\\b${pt}\\b`, 'gi');
+            translated = translated.replace(regex, en);
+        }
+
+        // Extract main keywords (remove common filler words)
+        const fillerWords = ['o', 'a', 'os', 'as', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 'nos', 'nas', 'sobre', 'about', 'the', 'of', 'in', 'on'];
+        const words = translated.split(/\s+/).filter(word => !fillerWords.includes(word) && word.length > 2);
+
+        // Take first 2-3 most relevant keywords
+        const keywords = words.slice(0, 3).join(' ');
+
+        console.log(`📝 Translated prompt: "${prompt}" → "${keywords}"`);
+        return keywords || 'nature';
+    }
+
+    /**
      * Generate video URL from prompt
      */
     async generateVideoFromPrompt(
@@ -91,12 +163,15 @@ export class PexelsService {
     ): Promise<string> {
         console.log('🎬 Searching Pexels for:', prompt);
 
+        // Translate and simplify prompt for better search results
+        const searchQuery = this.translateToEnglish(prompt);
+
         // Search for videos
         const orientation = aspectRatio === '9:16' ? 'portrait' : 'landscape';
-        const results = await this.searchVideos(prompt, orientation);
+        const results = await this.searchVideos(searchQuery, orientation);
 
         if (!results.videos || results.videos.length === 0) {
-            throw new Error(`No videos found for: ${prompt}`);
+            throw new Error(`No videos found for: ${prompt} (searched: ${searchQuery})`);
         }
 
         // Get first video
