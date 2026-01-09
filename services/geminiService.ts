@@ -113,7 +113,7 @@ export class GeminiService {
     const ai = new GoogleGenAI({ apiKey });
 
     let operation = await ai.models.generateVideos({
-      model: 'veo-3.1-fast-generate-preview', // Using Fast mode explicitly
+      model: 'veo-3.0-fast-generate-001', // Using stable production model (better quotas)
       prompt: `Cinematic loop, high quality, 4k, no text, ${prompt}`,
       config: {
         numberOfVideos: 1,
