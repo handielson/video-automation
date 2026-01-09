@@ -173,14 +173,24 @@ async function handleGenerateThumbnail(
 async function handleGenerateVideo(
     req: VercelRequest,
     res: VercelResponse,
-    payload: { prompt: string; aspectRatio: string }
+    payload: { prompt: string; aspectRatio: string; pexelsApiKey?: string }
 ) {
-    const { prompt, aspectRatio } = payload;
+    const { prompt, aspectRatio, pexelsApiKey } = payload;
 
     try {
+        // Validate API key
+        if (!pexelsApiKey) {
+            return res.status(400).json({
+                success: false,
+                error: 'Pexels API key not provided',
+                message: 'Please configure your Pexels API key in Settings.',
+                timestamp: new Date().toISOString()
+            });
+        }
+
         // Import Pexels service
         const { PexelsService } = await import('../services/pexelsService');
-        const pexels = new PexelsService();
+        const pexels = new PexelsService(pexelsApiKey);
 
         console.log('🎬 Generating video with Pexels...');
         console.log('📝 Prompt:', prompt);

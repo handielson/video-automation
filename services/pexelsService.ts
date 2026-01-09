@@ -9,9 +9,9 @@ export class PexelsService {
     private client: any;
     private apiKey: string;
 
-    constructor() {
-        // Get API key from environment or localStorage
-        this.apiKey = process.env.PEXELS_API_KEY || '';
+    constructor(apiKey?: string) {
+        // Get API key from parameter, environment, or localStorage
+        this.apiKey = apiKey || process.env.PEXELS_API_KEY || '';
 
         if (this.apiKey) {
             this.client = createClient(this.apiKey);

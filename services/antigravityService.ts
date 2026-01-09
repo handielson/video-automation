@@ -142,17 +142,21 @@ export class AntigravityService {
     ): Promise<string> {
         console.log('🎬 Generating video with Pexels (unlimited)...');
 
+        // Get Pexels API key from localStorage
+        const pexelsApiKey = localStorage.getItem('PEXELS_API_KEY');
+
         const response = await fetch(this.baseUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 action: 'generate-video',
-                payload: { prompt, aspectRatio }
+                payload: { prompt, aspectRatio, pexelsApiKey }
             })
         });
 
         if (!response.ok) {
-            throw new Error(`Pexels API error: ${response.statusText}`);
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `Pexels API error: ${response.statusText}`);
         }
 
         const data = await response.json();
