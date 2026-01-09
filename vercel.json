@@ -3,6 +3,12 @@
     "outputDirectory": "dist",
     "framework": "vite",
     "installCommand": "npm install",
+    "functions": {
+        "api/merge-video.ts": {
+            "maxDuration": 60,
+            "memory": 1024
+        }
+    },
     "crons": [
         {
             "path": "/api/generate-video",
