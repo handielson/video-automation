@@ -28,24 +28,40 @@ export class VideoProcessingService {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.details || 'Failed to merge video');
+            // If 404, API route doesn't exist (local development)
+            if (response.status === 404) {
+                throw new Error('API_NOT_AVAILABLE');
+            }
+
+            try {
+                const error = await response.json();
+                throw new Error(error.details || 'Failed to merge video');
+            } catch (e) {
+                throw new Error('Failed to merge video');
+            }
         }
 
         return await response.blob();
     }
 
     /**
-     * Download merged video
+     * Download video file
      */
-    downloadVideo(blob: Blob, filename: string = `viralshorts-${Date.now()}.mp4`) {
-        const url = URL.createObjectURL(blob);
+    downloadVideo(url: string, filename: string = `viralshorts-${Date.now()}.mp4`) {
         const link = document.createElement('a');
         link.href = url;
         link.download = filename;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }
+
+    /**
+     * Download blob as file
+     */
+    downloadBlob(blob: Blob, filename: string = `viralshorts-${Date.now()}.mp4`) {
+        const url = URL.createObjectURL(blob);
+        this.downloadVideo(url, filename);
         URL.revokeObjectURL(url);
     }
 
@@ -62,15 +78,33 @@ export class VideoProcessingService {
         try {
             onProgress?.('Preparando vídeo...');
 
-            const blob = await this.mergeVideo(videoUrl, audioUrl, text, duration);
+            try {
+                // Try backend processing first
+                const blob = await this.mergeVideo(videoUrl, audioUrl, text, duration);
+                onProgress?.('Baixando vídeo...');
+                this.downloadBlob(blob);
+                onProgress?.('Concluído!');
+            } catch (error: any) {
+                // Fallback for local development (API not available)
+                if (error.message === 'API_NOT_AVAILABLE') {
+                    console.warn('⚠️ Backend API not available. Downloading video only (no audio/subtitles merged).');
+                    onProgress?.('⚠️ Modo local: baixando vídeo sem áudio...');
 
-            onProgress?.('Baixando vídeo...');
+                    // Download video only
+                    this.downloadVideo(videoUrl);
 
-            this.downloadVideo(blob);
-
-            onProgress?.('Concluído!');
+                    onProgress?.('');
+                    throw new Error('BACKEND_NOT_AVAILABLE');
+                }
+                throw error;
+            }
         } catch (error: any) {
             console.error('Export error:', error);
+
+            if (error.message === 'BACKEND_NOT_AVAILABLE') {
+                throw new Error('⚠️ Vídeo baixado SEM áudio (modo local). Deploy no Vercel para processamento completo!');
+            }
+
             throw new Error(`Falha ao exportar vídeo: ${error.message}`);
         }
     }
