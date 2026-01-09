@@ -31,6 +31,7 @@ export interface VideoProject {
   script?: ScriptOutput;
   audioUrl?: string;
   videoUrl?: string;
+  videoPrompt?: string;
   thumbnailUrl?: string;
   videoProvider?: VideoProvider;
   status: 'idle' | 'generating_script' | 'generating_audio' | 'generating_video' | 'generating_thumbnail' | 'ready' | 'error';

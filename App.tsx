@@ -113,14 +113,15 @@ const App: React.FC = () => {
       // Step 4: Generate video with selected provider
       try {
         let videoUrl: string;
+        const videoPrompt = script.suggestedVisuals;
         if (videoProvider === 'antigravity') {
           console.log('🎬 Generating video with Antigravity (unlimited)');
-          videoUrl = await antigravity.generateVideo(script.suggestedVisuals, '9:16');
+          videoUrl = await antigravity.generateVideo(videoPrompt, '9:16');
         } else {
           console.log('🎬 Generating video with Gemini Veo (premium)');
-          videoUrl = await gemini.generateVideo(script.suggestedVisuals);
+          videoUrl = await gemini.generateVideo(videoPrompt);
         }
-        setProject(prev => ({ ...prev, videoUrl, status: 'ready' }));
+        setProject(prev => ({ ...prev, videoUrl, videoPrompt, status: 'ready' }));
       } catch (videoErr: any) {
         console.error("Video generation failed:", videoErr);
 
@@ -421,6 +422,7 @@ const App: React.FC = () => {
                 <VideoPreview
                   audioUrl={project.audioUrl}
                   videoUrl={project.videoUrl}
+                  videoPrompt={project.videoPrompt}
                   thumbnailUrl={project.thumbnailUrl}
                   text={`${project.script.hook} ${project.script.body} ${project.script.cta}`}
                   onReset={resetProject}

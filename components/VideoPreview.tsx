@@ -5,16 +5,26 @@ import { Play, Pause, RefreshCw, Download, Share2 } from 'lucide-react';
 interface VideoPreviewProps {
   videoUrl?: string;
   audioUrl?: string;
+  videoPrompt?: string;
   thumbnailUrl?: string;
   text: string;
   onReset: () => void;
 }
 
-export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, thumbnailUrl, text, onReset }) => {
+export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, videoPrompt, thumbnailUrl, text, onReset }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [promptCopied, setPromptCopied] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  const copyPrompt = () => {
+    if (videoPrompt) {
+      navigator.clipboard.writeText(videoPrompt);
+      setPromptCopied(true);
+      setTimeout(() => setPromptCopied(false), 2000);
+    }
+  };
 
   const words = text.split(' ');
   const wordDuration = 0.35; // Rough estimate for rapid viral speech
@@ -129,6 +139,35 @@ export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, 
           <Download size={18} /> Exportar
         </button>
       </div>
+
+      {videoPrompt && (
+        <div className="w-full space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-zinc-400">🎬 Prompt do Vídeo</span>
+            <button
+              onClick={copyPrompt}
+              className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
+            >
+              {promptCopied ? (
+                <>
+                  <span className="text-green-400">✓ Copiado!</span>
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  Copiar
+                </>
+              )}
+            </button>
+          </div>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+            <p className="text-sm text-zinc-300 leading-relaxed">{videoPrompt}</p>
+          </div>
+        </div>
+      )}
 
       {thumbnailUrl && (
         <div className="w-full space-y-3">
