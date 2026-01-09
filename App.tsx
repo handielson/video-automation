@@ -348,7 +348,7 @@ const App: React.FC = () => {
                         </div>
                         <span className="font-bold">Antigravity</span>
                       </div>
-                      <span className="text-xs text-zinc-400">Usa Veo (fallback) • 10/dia</span>
+                      <span className="text-xs text-zinc-400">Ilimitado • Rápido</span>
                     </button>
                     <button
                       onClick={() => {
@@ -364,102 +364,101 @@ const App: React.FC = () => {
                         </div>
                         <span className="font-bold">Gemini Veo</span>
                       </div>
-                      <span className="text-xs text-zinc-400">Cinematográfico • 10/dia</span>
+                      <span className="text-xs text-zinc-400">Premium • Cinematográfico</span>
                     </button>
                   </div>
                 </div>
+              </div>
 
-                {error && (
-                  <div className="bg-red-500/10 border border-red-500/50 p-4 rounded-2xl flex items-center gap-3 text-red-500">
-                    <AlertCircle size={20} />
-                    <p className="text-sm font-medium">{error}</p>
-                  </div>
-                )}
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/50 p-4 rounded-2xl flex items-center gap-3 text-red-500">
+                  <AlertCircle size={20} />
+                  <p className="text-sm font-medium">{error}</p>
+                </div>
+              )}
 
-                {
-                  project.status === 'idle' || project.status === 'error' ? (
-                    <button
-                      onClick={handleGenerate}
-                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-6 rounded-2xl font-bold text-xl shadow-xl shadow-purple-600/20 flex items-center justify-center gap-3 group transition-all transform active:scale-[0.98]"
-                    >
-                      Gerar Vídeo Viral <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  ) : (
-                    <div className="space-y-6">
-                      <div className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col items-center gap-6 text-center">
-                        <div className="relative">
-                          <Loader2 size={48} className="text-purple-500 animate-spin" />
-                          <Sparkles size={20} className="absolute -top-1 -right-1 text-pink-500 animate-pulse" />
+              {project.status === 'idle' || project.status === 'error' ? (
+                <button
+                  onClick={handleGenerate}
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-6 rounded-2xl font-bold text-xl shadow-xl shadow-purple-600/20 flex items-center justify-center gap-3 group transition-all transform active:scale-[0.98]"
+                >
+                  Gerar Vídeo Viral <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform" />
+                </button>
+              ) : (
+                <div className="space-y-6">
+                  <div className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-8 flex flex-col items-center gap-6 text-center">
+                    <div className="relative">
+                      <Loader2 size={48} className="text-purple-500 animate-spin" />
+                      <Sparkles size={20} className="absolute -top-1 -right-1 text-pink-500 animate-pulse" />
+                    </div>
+
+                    {/* Progress Steps */}
+                    <div className="w-full max-w-md space-y-4">
+                      <div>
+                        <h3 className="text-xl font-bold mb-1">
+                          {project.status === 'generating_script' && "Criando Roteiro Viral..."}
+                          {project.status === 'generating_thumbnail' && "Gerando Thumbnail..."}
+                          {project.status === 'generating_audio' && "Narrando o Texto..."}
+                          {project.status === 'generating_video' && `Gerando Vídeo (${project.videoProvider === 'antigravity' ? 'Antigravity' : 'Gemini Veo'})...`}
+                        </h3>
+                        <p className="text-zinc-500 text-sm">
+                          {project.status === 'generating_script' && "Etapa 1 de 4"}
+                          {project.status === 'generating_thumbnail' && "Etapa 2 de 4"}
+                          {project.status === 'generating_audio' && "Etapa 3 de 4"}
+                          {project.status === 'generating_video' && "Etapa 4 de 4"}
+                        </p>
+                      </div>
+
+                      <div className="w-full">
+                        <div className="flex justify-between text-xs text-zinc-400 mb-2">
+                          <span>Progresso</span>
+                          <span className="font-bold text-purple-400">
+                            {project.status === 'generating_script' && "25%"}
+                            {project.status === 'generating_thumbnail' && "50%"}
+                            {project.status === 'generating_audio' && "75%"}
+                            {project.status === 'generating_video' && "99%"}
+                          </span>
                         </div>
+                        <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-purple-600 to-pink-600 transition-all duration-500 ease-out"
+                            style={{
+                              width: project.status === 'generating_script' ? '25%' :
+                                project.status === 'generating_thumbnail' ? '50%' :
+                                  project.status === 'generating_audio' ? '75%' : '99%'
+                            }}
+                          />
+                        </div>
+                      </div>
 
-                        {/* Progress Steps */}
-                        <div className="w-full max-w-md space-y-4">
-                          <div>
-                            <h3 className="text-xl font-bold mb-1">
-                              {project.status === 'generating_script' && "Criando Roteiro Viral..."}
-                              {project.status === 'generating_thumbnail' && "Gerando Thumbnail..."}
-                              {project.status === 'generating_audio' && "Narrando o Texto..."}
-                              {project.status === 'generating_video' && `Gerando Vídeo (${project.videoProvider === 'antigravity' ? 'Antigravity' : 'Gemini Veo'})...`}
-                            </h3>
-                            <p className="text-zinc-500 text-sm">
-                              {project.status === 'generating_script' && "Etapa 1 de 4"}
-                              {project.status === 'generating_thumbnail' && "Etapa 2 de 4"}
-                              {project.status === 'generating_audio' && "Etapa 3 de 4"}
-                              {project.status === 'generating_video' && "Etapa 4 de 4"}
-                            </p>
+                      {/* Step Indicators */}
+                      <div className="flex justify-between items-center text-xs">
+                        <div className={`flex flex-col items-center gap-1 ${project.status === 'generating_script' ? 'text-purple-400' : 'text-green-500'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${project.status === 'generating_script' ? 'bg-purple-500/20 animate-pulse' : 'bg-green-500/20'}`}>
+                            {project.status === 'generating_script' ? '⏳' : '✓'}
                           </div>
-
-                          <div className="w-full">
-                            <div className="flex justify-between text-xs text-zinc-400 mb-2">
-                              <span>Progresso</span>
-                              <span className="font-bold text-purple-400">
-                                {project.status === 'generating_script' && "25%"}
-                                {project.status === 'generating_thumbnail' && "50%"}
-                                {project.status === 'generating_audio' && "75%"}
-                                {project.status === 'generating_video' && "99%"}
-                              </span>
-                            </div>
-                            <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
-                              <div
-                                className="h-full bg-gradient-to-r from-purple-600 to-pink-600 transition-all duration-500 ease-out"
-                                style={{
-                                  width: project.status === 'generating_script' ? '25%' :
-                                    project.status === 'generating_thumbnail' ? '50%' :
-                                      project.status === 'generating_audio' ? '75%' : '99%'
-                                }}
-                              />
-                            </div>
+                          <span className="font-medium">Roteiro</span>
+                        </div>
+                        <div className="flex-1 h-px bg-zinc-700 mx-2" />
+                        <div className={`flex flex-col items-center gap-1 ${project.status === 'generating_audio' ? 'text-purple-400' : project.status === 'generating_video' || project.status === 'ready' ? 'text-green-500' : 'text-zinc-600'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${project.status === 'generating_audio' ? 'bg-purple-500/20 animate-pulse' : project.status === 'generating_video' || project.status === 'ready' ? 'bg-green-500/20' : 'bg-zinc-800'}`}>
+                            {project.status === 'generating_audio' ? '⏳' : project.status === 'generating_video' || project.status === 'ready' ? '✓' : '🎤'}
                           </div>
-
-                          {/* Step Indicators */}
-                          <div className="flex justify-between items-center text-xs">
-                            <div className={`flex flex-col items-center gap-1 ${project.status === 'generating_script' ? 'text-purple-400' : 'text-green-500'}`}>
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${project.status === 'generating_script' ? 'bg-purple-500/20 animate-pulse' : 'bg-green-500/20'}`}>
-                                {project.status === 'generating_script' ? '⏳' : '✓'}
-                              </div>
-                              <span className="font-medium">Roteiro</span>
-                            </div>
-                            <div className="flex-1 h-px bg-zinc-700 mx-2" />
-                            <div className={`flex flex-col items-center gap-1 ${project.status === 'generating_audio' ? 'text-purple-400' : project.status === 'generating_video' || project.status === 'ready' ? 'text-green-500' : 'text-zinc-600'}`}>
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${project.status === 'generating_audio' ? 'bg-purple-500/20 animate-pulse' : project.status === 'generating_video' || project.status === 'ready' ? 'bg-green-500/20' : 'bg-zinc-800'}`}>
-                                {project.status === 'generating_audio' ? '⏳' : project.status === 'generating_video' || project.status === 'ready' ? '✓' : '🎤'}
-                              </div>
-                              <span className="font-medium">Áudio</span>
-                            </div>
-                            <div className="flex-1 h-px bg-zinc-700 mx-2" />
-                            <div className={`flex flex-col items-center gap-1 ${project.status === 'generating_video' ? 'text-purple-400' : project.status === 'ready' ? 'text-green-500' : 'text-zinc-600'}`}>
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${project.status === 'generating_video' ? 'bg-purple-500/20 animate-pulse' : project.status === 'ready' ? 'bg-green-500/20' : 'bg-zinc-800'}`}>
-                                {project.status === 'generating_video' ? '⏳' : project.status === 'ready' ? '✓' : '🎬'}
-                              </div>
-                              <span className="font-medium">Vídeo</span>
-                            </div>
+                          <span className="font-medium">Áudio</span>
+                        </div>
+                        <div className="flex-1 h-px bg-zinc-700 mx-2" />
+                        <div className={`flex flex-col items-center gap-1 ${project.status === 'generating_video' ? 'text-purple-400' : project.status === 'ready' ? 'text-green-500' : 'text-zinc-600'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${project.status === 'generating_video' ? 'bg-purple-500/20 animate-pulse' : project.status === 'ready' ? 'bg-green-500/20' : 'bg-zinc-800'}`}>
+                            {project.status === 'generating_video' ? '⏳' : project.status === 'ready' ? '✓' : '🎬'}
                           </div>
+                          <span className="font-medium">Vídeo</span>
                         </div>
                       </div>
                     </div>
-                  )
-                }
-            </section >
+                  </div>
+                </div>
+              )}
+            </section>
 
             <section className="bg-zinc-950/50 rounded-[2.5rem] border border-zinc-900 p-8 flex flex-col items-center justify-center min-h-[600px] relative overflow-hidden">
               {project.status === 'ready' && project.script ? (
