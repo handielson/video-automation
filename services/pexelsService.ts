@@ -14,7 +14,15 @@ export class PexelsService {
         this.apiKey = apiKey || process.env.PEXELS_API_KEY || '';
 
         if (this.apiKey) {
-            this.client = createClient(this.apiKey);
+            try {
+                this.client = createClient(this.apiKey);
+                console.log('✅ Pexels client created successfully');
+            } catch (error: any) {
+                console.error('❌ Failed to create Pexels client:', error);
+                throw new Error(`Failed to initialize Pexels client: ${error.message}`);
+            }
+        } else {
+            console.warn('⚠️ No Pexels API key provided to constructor');
         }
     }
 
