@@ -18,15 +18,12 @@ export class PexelsService {
         }
     }
 
-    /**
-     * Get API key from localStorage or environment
-     */
     private async getApiKey(): Promise<string> {
         if (this.apiKey) return this.apiKey;
 
         // Try to get from localStorage (browser only)
         if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem('pexelsApiKey');
+            const stored = localStorage.getItem('PEXELS_API_KEY');
             if (stored) {
                 this.apiKey = stored;
                 this.client = createClient(this.apiKey);
@@ -34,7 +31,7 @@ export class PexelsService {
             }
         }
 
-        throw new Error('Pexels API key not configured');
+        throw new Error('Pexels API key not configured. Please add it in Settings.');
     }
 
     /**
