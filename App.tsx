@@ -424,6 +424,7 @@ const App: React.FC = () => {
                   videoUrl={project.videoUrl}
                   videoPrompt={project.videoPrompt}
                   thumbnailUrl={project.thumbnailUrl}
+                  script={project.script}
                   text={`${project.script.hook} ${project.script.body} ${project.script.cta}`}
                   onReset={resetProject}
                 />

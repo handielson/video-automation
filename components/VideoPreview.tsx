@@ -8,13 +8,20 @@ interface VideoPreviewProps {
   videoPrompt?: string;
   thumbnailUrl?: string;
   text: string;
+  script?: {
+    title: string;
+    hook: string;
+    body: string;
+    cta: string;
+  };
   onReset: () => void;
 }
 
-export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, videoPrompt, thumbnailUrl, text, onReset }) => {
+export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, videoPrompt, thumbnailUrl, text, script, onReset }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [promptCopied, setPromptCopied] = useState(false);
+  const [scriptExpanded, setScriptExpanded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -24,6 +31,18 @@ export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, 
       setPromptCopied(true);
       setTimeout(() => setPromptCopied(false), 2000);
     }
+  };
+
+  const handleExport = async () => {
+    if (!videoUrl || !audioUrl) return;
+
+    // Download video
+    const link = document.createElement('a');
+    link.href = videoUrl;
+    link.download = `viralshorts-${Date.now()}.mp4`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const words = text.split(' ');
@@ -85,8 +104,11 @@ export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, 
           ref={videoRef}
           src={videoUrl || "https://assets.mixkit.co/videos/preview/mixkit-abstract-flowing-gold-particles-3453-large.mp4"}
           className="w-full h-full object-cover"
-          loop
           muted={!audioUrl}
+          onEnded={() => {
+            setIsPlaying(false);
+            setCurrentTime(0);
+          }}
         />
 
         {/* Captions Overlay - Positioned at Bottom */}
@@ -134,11 +156,45 @@ export const VideoPreview: React.FC<VideoPreviewProps> = ({ videoUrl, audioUrl, 
           <RefreshCw size={18} /> Novo Vídeo
         </button>
         <button
-          className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-3 rounded-xl transition-all shadow-lg shadow-purple-500/20 font-medium"
+          onClick={handleExport}
+          disabled={!videoUrl}
+          className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 py-3 rounded-xl transition-all shadow-lg shadow-purple-500/20 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Download size={18} /> Exportar
         </button>
       </div>
+
+      {script && (
+        <div className="w-full space-y-3">
+          <button
+            onClick={() => setScriptExpanded(!scriptExpanded)}
+            className="w-full flex items-center justify-between text-sm font-semibold text-zinc-400 hover:text-zinc-300 transition-colors"
+          >
+            <span>📝 Roteiro Completo</span>
+            <span className="text-xs">{scriptExpanded ? '▼' : '▶'}</span>
+          </button>
+          {scriptExpanded && (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-4">
+              <div>
+                <p className="text-xs font-bold text-purple-400 mb-1">TÍTULO:</p>
+                <p className="text-sm text-zinc-300">{script.title}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-yellow-400 mb-1">GANCHO (Hook):</p>
+                <p className="text-sm text-zinc-300">{script.hook}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-blue-400 mb-1">CORPO:</p>
+                <p className="text-sm text-zinc-300">{script.body}</p>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-green-400 mb-1">CHAMADA (CTA):</p>
+                <p className="text-sm text-zinc-300">{script.cta}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {videoPrompt && (
         <div className="w-full space-y-3">
