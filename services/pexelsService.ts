@@ -179,7 +179,7 @@ export class PexelsService {
     }
 
     /**
-     * Generate video URL from prompt
+     * Generate video URL from prompt with robust fallback strategy
      */
     async generateVideoFromPrompt(
         prompt: string,
@@ -189,19 +189,40 @@ export class PexelsService {
 
         // Translate and simplify prompt for better search results
         const searchQuery = this.translateToEnglish(prompt);
-
-        // Try portrait first
         const orientation = aspectRatio === '9:16' ? 'portrait' : 'landscape';
+
+        // Strategy 1: Try translated query with requested orientation
+        console.log(`📝 Strategy 1: Trying "${searchQuery}" (${orientation})`);
         let results = await this.searchVideos(searchQuery, orientation);
 
-        // Fallback: if no portrait videos found, try landscape
-        if ((!results.videos || results.videos.length === 0) && orientation === 'portrait') {
-            console.log('⚠️ No portrait videos found, trying landscape...');
-            results = await this.searchVideos(searchQuery, 'landscape');
+        // Strategy 2: Try opposite orientation if no results
+        if (!results.videos || results.videos.length === 0) {
+            const fallbackOrientation = orientation === 'portrait' ? 'landscape' : 'portrait';
+            console.log(`📝 Strategy 2: Trying "${searchQuery}" (${fallbackOrientation})`);
+            results = await this.searchVideos(searchQuery, fallbackOrientation);
+        }
+
+        // Strategy 3: Try first word only (most generic)
+        if (!results.videos || results.videos.length === 0) {
+            const firstWord = searchQuery.split(' ')[0];
+            console.log(`📝 Strategy 3: Trying first word only "${firstWord}"`);
+            results = await this.searchVideos(firstWord, orientation);
+        }
+
+        // Strategy 4: Try generic "nature" as last resort
+        if (!results.videos || results.videos.length === 0) {
+            console.log('📝 Strategy 4: Trying generic "nature" as fallback');
+            results = await this.searchVideos('nature', orientation);
+        }
+
+        // Strategy 5: Try "nature" landscape if still nothing
+        if (!results.videos || results.videos.length === 0) {
+            console.log('📝 Strategy 5: Trying "nature" landscape as last resort');
+            results = await this.searchVideos('nature', 'landscape');
         }
 
         if (!results.videos || results.videos.length === 0) {
-            throw new Error(`No videos found for: ${prompt} (searched: ${searchQuery})`);
+            throw new Error(`No videos found after all fallback attempts. Original prompt: ${prompt}, translated: ${searchQuery}`);
         }
 
         // Get first video
@@ -209,7 +230,7 @@ export class PexelsService {
         const videoUrl = this.getBestVideoUrl(video, 'hd');
 
         if (!videoUrl) {
-            throw new Error('No suitable video file found');
+            throw new Error('No suitable video file found in results');
         }
 
         console.log('✅ Found Pexels video:', video.id);
